@@ -275,7 +275,7 @@ else { \
             }
             else {
                 TFHpple *xpathParser = [[TFHpple alloc] initWithHTMLData:data];
-                NSArray<TFHppleElement *> *pageURLs  = [xpathParser searchWithXPathQuery:@"//div [@class='gt100']//a"];
+                NSArray<TFHppleElement *> *pageURLs  = [xpathParser searchWithXPathQuery:@"//div [@class='gt200']//a"];
                 
                 //如果 parse 有結果, 才做 request api 的動作, 反之 callback HentaiParserStatusParseFail
                 if (pageURLs.count) {

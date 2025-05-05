@@ -263,7 +263,7 @@
         self.info = info;
         self.parser = parser;
         self.currentPageIndex = 0;
-        self.totalPageIndex = floor(info.filecount.floatValue / 40.0f);
+        self.totalPageIndex = floor(info.filecount.floatValue / 20.0f);
         self.pageLocker = [NSLock new];
         self.imagePages = [NSMutableArray array];
         self.loadingImagePages = [NSMutableArray array];
