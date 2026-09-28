@@ -87,7 +87,8 @@ private struct MainTabs: View {
             case .finishedWithoutOriginals(let gallery):
                 model.toasts.show(.toastDownloadFinishedWithoutOriginals(gallery.bestTitle), kaomoji: "O口O", duration: .seconds(3.5))
             case .originalsRefused:
-                model.toasts.show(.toastOriginalsNeedLogin, kaomoji: "O口O", duration: .seconds(3.5))
+                // Logged out, originals need a login; logged in, the likely reason is GP or image limits.
+                model.toasts.show(model.isLoggedIn ? .toastOriginalsOutOfLimits : .toastOriginalsNeedLogin, kaomoji: "O口O", duration: .seconds(3.5))
             case .rateLimited:
                 model.toasts.show(.toastRateLimited, kaomoji: "O口O", duration: .seconds(4))
             case .batchFinished(let work, let originalsRefused):

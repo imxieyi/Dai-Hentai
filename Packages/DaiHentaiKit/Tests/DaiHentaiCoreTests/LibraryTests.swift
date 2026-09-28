@@ -565,6 +565,20 @@ struct LegacyDatabaseBuilder {
         #expect(downloader.pageStates.allSatisfy { $0 == .failed })
     }
 
+    @Test func aReplacedPageIsDecodedAgain() async throws {
+        // Readers reopened after an upgrade must not get the reduced page back from memory.
+        let files = GalleryFileStore(root: URL.temporaryDirectory.appending(path: "files-\(UUID().uuidString)", directoryHint: .isDirectory))
+        try files.write(FixtureArt.page(gid: "1", page: 1), folder: "a", fileName: "1-1")
+        let url = files.fileURL(folder: "a", fileName: "1-1")
+        let pipeline = ImagePipeline()
+        let reduced = try #require(await pipeline.page(at: url, maxPixelSize: 4000))
+        #expect(reduced.size == CGSize(width: 1000, height: 1414))
+
+        try files.write(FixtureArt.original(gid: "1", page: 1), folder: "a", fileName: "1-1", isOriginal: true)
+        let original = try #require(await pipeline.page(at: url, maxPixelSize: 4000))
+        #expect(original.size == FixtureArt.originalSize(1))
+    }
+
     @Test func aSavedCoverIsShownWithoutTheNetwork() async throws {
         let library = try makeLibrary()
         let gallery = FixtureGalleryService.galleries[6]

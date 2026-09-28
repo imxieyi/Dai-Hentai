@@ -55,7 +55,7 @@ struct CoverImage: View {
 struct PageImage: View {
     let fileURL: URL
     let targetSize: CGSize
-    /// Bumped when the file is replaced (「重新載入這頁」, or the original swapped in) to decode the new file.
+    /// Bumped when the file is replaced (「重新載入這頁」, or the original swapped in), so an open page decodes it again.
     var version = 0
 
     @Environment(\.displayScale) private var displayScale
@@ -75,12 +75,12 @@ struct PageImage: View {
         .task(id: "\(fileURL.path(percentEncoded: false))|\(version)|\(Int(targetSize.width))") {
             let maxPixel = max(targetSize.width, targetSize.height) * displayScale
             guard maxPixel > 0 else { return }
-            let key = ImagePipeline.pageKey(fileURL, version: version, maxPixelSize: maxPixel)
+            let key = ImagePipeline.pageKey(fileURL, maxPixelSize: maxPixel)
             if let cached = ImagePipeline.shared.cachedImage(for: key) {
                 image = cached
                 return
             }
-            image = await ImagePipeline.shared.page(at: fileURL, version: version, maxPixelSize: maxPixel)
+            image = await ImagePipeline.shared.page(at: fileURL, maxPixelSize: maxPixel)
         }
     }
 }

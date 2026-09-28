@@ -51,17 +51,21 @@ public actor ImagePipeline {
     }
 
     /// A downloaded page from disk, downsampled to `maxPixelSize` on its longest side.
-    /// `version` changes when the file is replaced (e.g. with the original), so the old image isn't reused.
-    public func page(at fileURL: URL, version: Int = 0, maxPixelSize: CGFloat) async -> UIImage? {
-        let key = Self.pageKey(fileURL, version: version, maxPixelSize: maxPixelSize)
+    public func page(at fileURL: URL, maxPixelSize: CGFloat) async -> UIImage? {
+        let key = Self.pageKey(fileURL, maxPixelSize: maxPixelSize)
         if let cached = memory.image(for: key) { return cached }
         let image = await Self.downsample(fileURL: fileURL, maxPixelSize: maxPixelSize)
         if let image { memory.set(image, for: key) }
         return image
     }
 
-    public nonisolated static func pageKey(_ fileURL: URL, version: Int = 0, maxPixelSize: CGFloat) -> String {
-        "page|\(fileURL.path(percentEncoded: false))|\(version)|\(Int(maxPixelSize))"
+    /// Includes which file is at the path (pages are replaced atomically, e.g. with the original), so an
+    /// image decoded from the file before isn't reused.
+    public nonisolated static func pageKey(_ fileURL: URL, maxPixelSize: CGFloat) -> String {
+        let path = fileURL.path(percentEncoded: false)
+        var info = stat()
+        let file = stat(path, &info) == 0 ? "\(info.st_ino)-\(info.st_size)-\(info.st_mtimespec.tv_sec).\(info.st_mtimespec.tv_nsec)" : "none"
+        return "page|\(path)|\(file)|\(Int(maxPixelSize))"
     }
 
     public func removePages(inFolder folder: URL) {

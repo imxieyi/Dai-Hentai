@@ -6523,6 +6523,36 @@
         }
       }
     },
+    "Toast.OriginalsOutOfLimits" : {
+      "extractionState" : "manual",
+      "comment" : "A logged-in user was refused the original files, likely for lack of GP or image limits",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn’t get the originals. You may be out of GP or image limits."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "元画像をもらえなかったよ。GP か閲覧制限が足りないかも"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拿不到原图：可能是 GP 或图片额度不够"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拿不到原圖：可能是 GP 或圖片額度不夠"
+          }
+        }
+      }
+    },
     "Toast.RateLimited" : {
       "extractionState" : "manual",
       "comment" : "The site's image limits ran out, so every download stopped",
