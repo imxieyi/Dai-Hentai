@@ -3,1081 +3,429 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1C000ED91E570F9C004060A5 /* ImageURLOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C000ED81E570F9C004060A5 /* ImageURLOperation.m */; };
-		1C0608431E53473500E6A285 /* GalleryViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C0608421E53473500E6A285 /* GalleryViewController.m */; };
-		1C0867FB1E5C8F3D00E361B5 /* SearchViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C0867FA1E5C8F3D00E361B5 /* SearchViewController.m */; };
-		1C0867FF1E5C96B100E361B5 /* SearchInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C0867FE1E5C96B100E361B5 /* SearchInfo.m */; };
-		1C0CF4981E82D466005ADDFA /* HistoriesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C0CF4971E82D466005ADDFA /* HistoriesViewController.m */; };
-		1C1AD0341E49B79800544217 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C1AD0331E49B79800544217 /* main.m */; };
-		1C1AD03D1E49B79800544217 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1C1AD03B1E49B79800544217 /* Main.storyboard */; };
-		1C1AD03F1E49B79800544217 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1C1AD03E1E49B79800544217 /* Assets.xcassets */; };
-		1C1AD0421E49B79800544217 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1C1AD0401E49B79800544217 /* LaunchScreen.storyboard */; };
-		1C33D10B1E5F34BC00F0EB12 /* SearchKeywordCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C33D1091E5F34BC00F0EB12 /* SearchKeywordCell.m */; };
-		1C33D10E1E5F35A600F0EB12 /* SearchRatingCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C33D10D1E5F35A600F0EB12 /* SearchRatingCell.m */; };
-		1C33D1111E5F391A00F0EB12 /* SearchCategoryCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C33D1101E5F391A00F0EB12 /* SearchCategoryCell.m */; };
-		1C3DDE021E6094A00034B3E2 /* SearchItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C3DDE011E6094A00034B3E2 /* SearchItem.m */; };
-		1C4243ED21A450A800A2661A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C4243EC21A450A800A2661A /* AppDelegate.swift */; };
-		1C4632CC21A45C5F000D466F /* AuthHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C4632CB21A45C5F000D466F /* AuthHelper.swift */; };
-		1C4632CE21A462CE000D466F /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C4632CD21A462CE000D466F /* LoginViewController.swift */; };
-		1C4D8B291E861B4100113D0E /* NSTimer+Block.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C4D8B281E861B4100113D0E /* NSTimer+Block.m */; };
-		1C4D8B2D1E86201100113D0E /* UIAlertController+Block.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C4D8B2C1E86201100113D0E /* UIAlertController+Block.m */; };
-		1C5BF266200CA3AE00FB260A /* DownloadedsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C5BF265200CA3AE00FB260A /* DownloadedsViewController.m */; };
-		1C5DFDDF219BB7380044EDA9 /* ExCookie.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C5DFDDE219BB7380044EDA9 /* ExCookie.swift */; };
-		1C6A96AB204E42A800151ECE /* SearchHintCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C6A96AA204E42A800151ECE /* SearchHintCell.m */; };
-		1C6B0DD2236A9F5800F2CECA /* ListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C6B0DD1236A9F5800F2CECA /* ListCell.swift */; };
-		1C7ABF622021C73F006313C3 /* SettingViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C7ABF612021C73F006313C3 /* SettingViewController.m */; };
-		1C7CA72F1E49C13400D94CFB /* HentaiParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C7CA72E1E49C13400D94CFB /* HentaiParser.m */; };
-		1C8DEE82200896B400C479F4 /* DBSearchSetting.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C8DEE81200896B400C479F4 /* DBSearchSetting.m */; };
-		1C8DEE85200898E500C479F4 /* DBGalleryPage.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C8DEE84200898E500C479F4 /* DBGalleryPage.m */; };
-		1C8DEE8820089A3100C479F4 /* DBGallery.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C8DEE8720089A3100C479F4 /* DBGallery.m */; };
-		1C9294E81E4C4330001AB1CE /* ListViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C9294E71E4C4330001AB1CE /* ListViewController.m */; };
-		1C97CB321E5EBF17000A8874 /* SearchBaseCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C97CB311E5EBF17000A8874 /* SearchBaseCell.m */; };
-		1CA192D51E926B4A00D352B3 /* RelatedViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CA192D41E926B4A00D352B3 /* RelatedViewController.m */; };
-		1CA255F7203142300040B73F /* DBUserPreference.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CA255F6203142300040B73F /* DBUserPreference.m */; };
-		1CA255FB203143040040B73F /* UserPreference.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CA255FA203143040040B73F /* UserPreference.m */; };
-		1CA2707E1E50B9F80054AA6E /* EHentaiParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CA2707D1E50B9F80054AA6E /* EHentaiParser.m */; };
-		1CA270811E50BA0B0054AA6E /* ExHentaiParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CA270801E50BA0B0054AA6E /* ExHentaiParser.m */; };
-		1CBF60841E4D9ABC000CA9E5 /* FilesManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CBF60811E4D9ABC000CA9E5 /* FilesManager.m */; };
-		1CBF60851E4D9ABC000CA9E5 /* FMStream.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CBF60831E4D9ABC000CA9E5 /* FMStream.m */; };
-		1CD02DFD200C749200B3F717 /* CBLDatabase+RefreshView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CD02DFC200C749200B3F717 /* CBLDatabase+RefreshView.m */; };
-		1CD2401021AC526100D074AB /* TabBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CD2400F21AC526100D074AB /* TabBarController.swift */; };
-		1CD68E6021BEB890004DF4A8 /* CheckPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CD68E5F21BEB890004DF4A8 /* CheckPageViewController.swift */; };
-		1CDF390A236AB55700C927A6 /* MessageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CDF3909236AB55700C927A6 /* MessageCell.swift */; };
-		1CE09D3D20557B8C0064D54B /* SettingViewController+SizeCalculator.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CE09D3B20557B8C0064D54B /* SettingViewController+SizeCalculator.m */; };
-		1CE09D4120557C710064D54B /* SettingViewController+ListAndAPIStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CE09D4020557C710064D54B /* SettingViewController+ListAndAPIStatus.m */; };
-		1CE09D45205587E50064D54B /* SettingViewController+ScrollDirection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CE09D44205587E50064D54B /* SettingViewController+ScrollDirection.m */; };
-		1CE09D4920558B760064D54B /* SettingViewController+Lock.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CE09D4820558B760064D54B /* SettingViewController+Lock.m */; };
-		1CE4D1B6200461E200F8B79A /* HentaiDownloadCenter.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CE4D1B5200461E200F8B79A /* HentaiDownloadCenter.m */; };
-		1CE4D1B9200462ED00F8B79A /* HentaiImagesManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CE4D1B8200462ED00F8B79A /* HentaiImagesManager.m */; };
-		1CEC12BE1E500E9A00F3E3C4 /* DaiStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CEC12B11E500E9A00F3E3C4 /* DaiStorage.m */; };
-		1CEC12BF1E500E9A00F3E3C4 /* DaiStorageArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CEC12B31E500E9A00F3E3C4 /* DaiStorageArray.m */; };
-		1CEC12C01E500E9A00F3E3C4 /* DaiStoragePath.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CEC12B71E500E9A00F3E3C4 /* DaiStoragePath.m */; };
-		1CEC12C11E500E9A00F3E3C4 /* DaiStoragePropertiesInObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CEC12B91E500E9A00F3E3C4 /* DaiStoragePropertiesInObject.m */; };
-		1CEC12C21E500E9A00F3E3C4 /* DaiStorageProperty.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CEC12BB1E500E9A00F3E3C4 /* DaiStorageProperty.m */; };
-		1CEC12C31E500E9A00F3E3C4 /* DaiStorageTypeChecking.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CEC12BD1E500E9A00F3E3C4 /* DaiStorageTypeChecking.m */; };
-		1CEC12C81E500F9300F3E3C4 /* HentaiInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CEC12C71E500F9300F3E3C4 /* HentaiInfo.m */; };
-		1CEE14712056D834005983B0 /* Translator.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CEE14702056D834005983B0 /* Translator.m */; };
-		1CEE14732056D84E005983B0 /* translator.json in Resources */ = {isa = PBXBuildFile; fileRef = 1CEE14722056D84E005983B0 /* translator.json */; };
-		1CFE73131FFE32AE0018172F /* Dai-Hentai-Bridging-Header.h in Sources */ = {isa = PBXBuildFile; fileRef = 1CFE73121FFE32AE0018172F /* Dai-Hentai-Bridging-Header.h */; };
-		1CFEE1E921CA76DD00D6010C /* GalleryCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CFEE1E821CA76DD00D6010C /* GalleryCell.swift */; };
-		4DC6F4FDFFA849038487E4D8 /* libPods-Dai-Hentai.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 88F4AEC071F70AFD3813A609 /* libPods-Dai-Hentai.a */; };
-		E48D1A672357652E005F1439 /* SettingViewController+LoginUsingExKey.m in Sources */ = {isa = PBXBuildFile; fileRef = E48D1A662357652E005F1439 /* SettingViewController+LoginUsingExKey.m */; };
-		E4D2013923948ED200BB7908 /* GalleryCollectionViewHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D2013823948ED200BB7908 /* GalleryCollectionViewHandler.swift */; };
+		D41000000000000000000022 /* DaiHentaiUI in Frameworks */ = {isa = PBXBuildFile; productRef = D41000000000000000000021 /* DaiHentaiUI */; };
+		D41000000000000000000024 /* DaiHentaiCore in Frameworks */ = {isa = PBXBuildFile; productRef = D41000000000000000000023 /* DaiHentaiCore */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		D41000000000000000000038 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D41000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D41000000000000000000010;
+			remoteInfo = "Dai-Hentai";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
-		19DB5C474C0FD71A14F15120 /* Pods-Dai-Hentai.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Dai-Hentai.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Dai-Hentai/Pods-Dai-Hentai.debug.xcconfig"; sourceTree = "<group>"; };
-		1A6E9F07B9A9588FE4ECFCA8 /* Pods-Dai-Hentai.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Dai-Hentai.release.xcconfig"; path = "Pods/Target Support Files/Pods-Dai-Hentai/Pods-Dai-Hentai.release.xcconfig"; sourceTree = "<group>"; };
-		1C000ED71E570F9C004060A5 /* ImageURLOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageURLOperation.h; sourceTree = "<group>"; };
-		1C000ED81E570F9C004060A5 /* ImageURLOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageURLOperation.m; sourceTree = "<group>"; };
-		1C0608411E53473500E6A285 /* GalleryViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GalleryViewController.h; sourceTree = "<group>"; };
-		1C0608421E53473500E6A285 /* GalleryViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GalleryViewController.m; sourceTree = "<group>"; };
-		1C0867F91E5C8F3D00E361B5 /* SearchViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchViewController.h; sourceTree = "<group>"; };
-		1C0867FA1E5C8F3D00E361B5 /* SearchViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SearchViewController.m; sourceTree = "<group>"; };
-		1C0867FD1E5C96B100E361B5 /* SearchInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchInfo.h; sourceTree = "<group>"; };
-		1C0867FE1E5C96B100E361B5 /* SearchInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SearchInfo.m; sourceTree = "<group>"; };
-		1C0CF4961E82D466005ADDFA /* HistoriesViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HistoriesViewController.h; sourceTree = "<group>"; };
-		1C0CF4971E82D466005ADDFA /* HistoriesViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HistoriesViewController.m; sourceTree = "<group>"; };
-		1C1AD02F1E49B79800544217 /* Dai-Hentai.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Dai-Hentai.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		1C1AD0331E49B79800544217 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		1C1AD03C1E49B79800544217 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		1C1AD03E1E49B79800544217 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		1C1AD0411E49B79800544217 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		1C1AD0431E49B79800544217 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		1C33D1081E5F34BC00F0EB12 /* SearchKeywordCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchKeywordCell.h; sourceTree = "<group>"; };
-		1C33D1091E5F34BC00F0EB12 /* SearchKeywordCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SearchKeywordCell.m; sourceTree = "<group>"; };
-		1C33D10C1E5F35A600F0EB12 /* SearchRatingCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchRatingCell.h; sourceTree = "<group>"; };
-		1C33D10D1E5F35A600F0EB12 /* SearchRatingCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SearchRatingCell.m; sourceTree = "<group>"; };
-		1C33D10F1E5F391A00F0EB12 /* SearchCategoryCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchCategoryCell.h; sourceTree = "<group>"; };
-		1C33D1101E5F391A00F0EB12 /* SearchCategoryCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SearchCategoryCell.m; sourceTree = "<group>"; };
-		1C3DDE001E6094A00034B3E2 /* SearchItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchItem.h; sourceTree = "<group>"; };
-		1C3DDE011E6094A00034B3E2 /* SearchItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SearchItem.m; sourceTree = "<group>"; };
-		1C4243EC21A450A800A2661A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		1C4632CB21A45C5F000D466F /* AuthHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthHelper.swift; sourceTree = "<group>"; };
-		1C4632CD21A462CE000D466F /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
-		1C4D8B271E861B4100113D0E /* NSTimer+Block.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSTimer+Block.h"; sourceTree = "<group>"; };
-		1C4D8B281E861B4100113D0E /* NSTimer+Block.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSTimer+Block.m"; sourceTree = "<group>"; };
-		1C4D8B2B1E86201100113D0E /* UIAlertController+Block.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIAlertController+Block.h"; sourceTree = "<group>"; };
-		1C4D8B2C1E86201100113D0E /* UIAlertController+Block.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIAlertController+Block.m"; sourceTree = "<group>"; };
-		1C5BF264200CA3AE00FB260A /* DownloadedsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DownloadedsViewController.h; sourceTree = "<group>"; };
-		1C5BF265200CA3AE00FB260A /* DownloadedsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DownloadedsViewController.m; sourceTree = "<group>"; };
-		1C5DFDDE219BB7380044EDA9 /* ExCookie.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExCookie.swift; sourceTree = "<group>"; };
-		1C6A96A9204E42A800151ECE /* SearchHintCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SearchHintCell.h; sourceTree = "<group>"; };
-		1C6A96AA204E42A800151ECE /* SearchHintCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SearchHintCell.m; sourceTree = "<group>"; };
-		1C6B0DD1236A9F5800F2CECA /* ListCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListCell.swift; sourceTree = "<group>"; };
-		1C7ABF5D2021BBF8006313C3 /* EXTScope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EXTScope.h; sourceTree = "<group>"; };
-		1C7ABF5E2021BBF8006313C3 /* metamacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = metamacros.h; sourceTree = "<group>"; };
-		1C7ABF602021C73F006313C3 /* SettingViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingViewController.h; sourceTree = "<group>"; };
-		1C7ABF612021C73F006313C3 /* SettingViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingViewController.m; sourceTree = "<group>"; };
-		1C7CA72D1E49C13400D94CFB /* HentaiParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HentaiParser.h; sourceTree = "<group>"; };
-		1C7CA72E1E49C13400D94CFB /* HentaiParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HentaiParser.m; sourceTree = "<group>"; };
-		1C8DEE80200896B400C479F4 /* DBSearchSetting.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DBSearchSetting.h; sourceTree = "<group>"; };
-		1C8DEE81200896B400C479F4 /* DBSearchSetting.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DBSearchSetting.m; sourceTree = "<group>"; };
-		1C8DEE83200898E500C479F4 /* DBGalleryPage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DBGalleryPage.h; sourceTree = "<group>"; };
-		1C8DEE84200898E500C479F4 /* DBGalleryPage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DBGalleryPage.m; sourceTree = "<group>"; };
-		1C8DEE8620089A3100C479F4 /* DBGallery.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DBGallery.h; sourceTree = "<group>"; };
-		1C8DEE8720089A3100C479F4 /* DBGallery.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DBGallery.m; sourceTree = "<group>"; };
-		1C9294E61E4C4330001AB1CE /* ListViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ListViewController.h; sourceTree = "<group>"; };
-		1C9294E71E4C4330001AB1CE /* ListViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ListViewController.m; sourceTree = "<group>"; };
-		1C97CB301E5EBF17000A8874 /* SearchBaseCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchBaseCell.h; sourceTree = "<group>"; };
-		1C97CB311E5EBF17000A8874 /* SearchBaseCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SearchBaseCell.m; sourceTree = "<group>"; };
-		1CA192D31E926B4A00D352B3 /* RelatedViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RelatedViewController.h; sourceTree = "<group>"; };
-		1CA192D41E926B4A00D352B3 /* RelatedViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RelatedViewController.m; sourceTree = "<group>"; };
-		1CA255F5203142300040B73F /* DBUserPreference.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DBUserPreference.h; sourceTree = "<group>"; };
-		1CA255F6203142300040B73F /* DBUserPreference.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DBUserPreference.m; sourceTree = "<group>"; };
-		1CA255F9203143040040B73F /* UserPreference.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UserPreference.h; sourceTree = "<group>"; };
-		1CA255FA203143040040B73F /* UserPreference.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UserPreference.m; sourceTree = "<group>"; };
-		1CA2707C1E50B9F80054AA6E /* EHentaiParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EHentaiParser.h; sourceTree = "<group>"; };
-		1CA2707D1E50B9F80054AA6E /* EHentaiParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EHentaiParser.m; sourceTree = "<group>"; };
-		1CA2707F1E50BA0B0054AA6E /* ExHentaiParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExHentaiParser.h; sourceTree = "<group>"; };
-		1CA270801E50BA0B0054AA6E /* ExHentaiParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExHentaiParser.m; sourceTree = "<group>"; };
-		1CA707141E85050D00AF24EF /* VersionGenerator.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = VersionGenerator.sh; sourceTree = "<group>"; };
-		1CAF38941E854B8500A4C0DD /* PrivateListViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PrivateListViewController.h; sourceTree = "<group>"; };
-		1CBF60801E4D9ABC000CA9E5 /* FilesManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FilesManager.h; sourceTree = "<group>"; };
-		1CBF60811E4D9ABC000CA9E5 /* FilesManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FilesManager.m; sourceTree = "<group>"; };
-		1CBF60821E4D9ABC000CA9E5 /* FMStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMStream.h; sourceTree = "<group>"; };
-		1CBF60831E4D9ABC000CA9E5 /* FMStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMStream.m; sourceTree = "<group>"; };
-		1CD02DFB200C749200B3F717 /* CBLDatabase+RefreshView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+RefreshView.h"; sourceTree = "<group>"; };
-		1CD02DFC200C749200B3F717 /* CBLDatabase+RefreshView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "CBLDatabase+RefreshView.m"; sourceTree = "<group>"; };
-		1CD2400F21AC526100D074AB /* TabBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarController.swift; sourceTree = "<group>"; };
-		1CD68E5F21BEB890004DF4A8 /* CheckPageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckPageViewController.swift; sourceTree = "<group>"; };
-		1CDF3909236AB55700C927A6 /* MessageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageCell.swift; sourceTree = "<group>"; };
-		1CE09D332055777D0064D54B /* PrivateSettingViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PrivateSettingViewController.h; sourceTree = "<group>"; };
-		1CE09D3B20557B8C0064D54B /* SettingViewController+SizeCalculator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SettingViewController+SizeCalculator.m"; sourceTree = "<group>"; };
-		1CE09D3C20557B8C0064D54B /* SettingViewController+SizeCalculator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SettingViewController+SizeCalculator.h"; sourceTree = "<group>"; };
-		1CE09D3F20557C710064D54B /* SettingViewController+ListAndAPIStatus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SettingViewController+ListAndAPIStatus.h"; sourceTree = "<group>"; };
-		1CE09D4020557C710064D54B /* SettingViewController+ListAndAPIStatus.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SettingViewController+ListAndAPIStatus.m"; sourceTree = "<group>"; };
-		1CE09D43205587E50064D54B /* SettingViewController+ScrollDirection.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SettingViewController+ScrollDirection.h"; sourceTree = "<group>"; };
-		1CE09D44205587E50064D54B /* SettingViewController+ScrollDirection.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SettingViewController+ScrollDirection.m"; sourceTree = "<group>"; };
-		1CE09D4720558B760064D54B /* SettingViewController+Lock.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SettingViewController+Lock.h"; sourceTree = "<group>"; };
-		1CE09D4820558B760064D54B /* SettingViewController+Lock.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SettingViewController+Lock.m"; sourceTree = "<group>"; };
-		1CE4D1B4200461E200F8B79A /* HentaiDownloadCenter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HentaiDownloadCenter.h; sourceTree = "<group>"; };
-		1CE4D1B5200461E200F8B79A /* HentaiDownloadCenter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HentaiDownloadCenter.m; sourceTree = "<group>"; };
-		1CE4D1B7200462ED00F8B79A /* HentaiImagesManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HentaiImagesManager.h; sourceTree = "<group>"; };
-		1CE4D1B8200462ED00F8B79A /* HentaiImagesManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HentaiImagesManager.m; sourceTree = "<group>"; };
-		1CEC12B01E500E9A00F3E3C4 /* DaiStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DaiStorage.h; sourceTree = "<group>"; };
-		1CEC12B11E500E9A00F3E3C4 /* DaiStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DaiStorage.m; sourceTree = "<group>"; };
-		1CEC12B21E500E9A00F3E3C4 /* DaiStorageArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DaiStorageArray.h; sourceTree = "<group>"; };
-		1CEC12B31E500E9A00F3E3C4 /* DaiStorageArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DaiStorageArray.m; sourceTree = "<group>"; };
-		1CEC12B41E500E9A00F3E3C4 /* DaiStorageDefine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DaiStorageDefine.h; sourceTree = "<group>"; };
-		1CEC12B61E500E9A00F3E3C4 /* DaiStoragePath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DaiStoragePath.h; sourceTree = "<group>"; };
-		1CEC12B71E500E9A00F3E3C4 /* DaiStoragePath.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DaiStoragePath.m; sourceTree = "<group>"; };
-		1CEC12B81E500E9A00F3E3C4 /* DaiStoragePropertiesInObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DaiStoragePropertiesInObject.h; sourceTree = "<group>"; };
-		1CEC12B91E500E9A00F3E3C4 /* DaiStoragePropertiesInObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DaiStoragePropertiesInObject.m; sourceTree = "<group>"; };
-		1CEC12BA1E500E9A00F3E3C4 /* DaiStorageProperty.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DaiStorageProperty.h; sourceTree = "<group>"; };
-		1CEC12BB1E500E9A00F3E3C4 /* DaiStorageProperty.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DaiStorageProperty.m; sourceTree = "<group>"; };
-		1CEC12BC1E500E9A00F3E3C4 /* DaiStorageTypeChecking.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DaiStorageTypeChecking.h; sourceTree = "<group>"; };
-		1CEC12BD1E500E9A00F3E3C4 /* DaiStorageTypeChecking.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DaiStorageTypeChecking.m; sourceTree = "<group>"; };
-		1CEC12C61E500F9300F3E3C4 /* HentaiInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HentaiInfo.h; sourceTree = "<group>"; };
-		1CEC12C71E500F9300F3E3C4 /* HentaiInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HentaiInfo.m; sourceTree = "<group>"; };
-		1CEE146F2056D834005983B0 /* Translator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Translator.h; sourceTree = "<group>"; };
-		1CEE14702056D834005983B0 /* Translator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Translator.m; sourceTree = "<group>"; };
-		1CEE14722056D84E005983B0 /* translator.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = translator.json; sourceTree = "<group>"; };
-		1CFE73121FFE32AE0018172F /* Dai-Hentai-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Dai-Hentai-Bridging-Header.h"; sourceTree = "<group>"; };
-		1CFEE1E821CA76DD00D6010C /* GalleryCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryCell.swift; sourceTree = "<group>"; };
-		88F4AEC071F70AFD3813A609 /* libPods-Dai-Hentai.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Dai-Hentai.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		E48D1A662357652E005F1439 /* SettingViewController+LoginUsingExKey.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "SettingViewController+LoginUsingExKey.m"; sourceTree = "<group>"; };
-		E48D1A6823576554005F1439 /* SettingViewController+LoginUsingExKey.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SettingViewController+LoginUsingExKey.h"; sourceTree = "<group>"; };
-		E4D2013823948ED200BB7908 /* GalleryCollectionViewHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryCollectionViewHandler.swift; sourceTree = "<group>"; };
+		D41000000000000000000004 /* Dai-Hentai.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Dai-Hentai.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D41000000000000000000005 /* Dai-HentaiUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Dai-HentaiUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D41000000000000000000008 /* Exceptions for "Dai-Hentai" folder in "Dai-Hentai" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D41000000000000000000010 /* Dai-Hentai */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		D41000000000000000000006 /* Dai-Hentai */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D41000000000000000000008 /* Exceptions for "Dai-Hentai" folder in "Dai-Hentai" target */,
+			);
+			path = "Dai-Hentai";
+			sourceTree = "<group>";
+		};
+		D41000000000000000000007 /* Dai-HentaiUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Dai-HentaiUITests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
-		1C1AD02C1E49B79800544217 /* Frameworks */ = {
+		D41000000000000000000012 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4DC6F4FDFFA849038487E4D8 /* libPods-Dai-Hentai.a in Frameworks */,
+				D41000000000000000000022 /* DaiHentaiUI in Frameworks */,
+				D41000000000000000000024 /* DaiHentaiCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D41000000000000000000032 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		1C0608401E53471100E6A285 /* GalleryViewController */ = {
+		D41000000000000000000002 = {
 			isa = PBXGroup;
 			children = (
-				1C0608411E53473500E6A285 /* GalleryViewController.h */,
-				1C0608421E53473500E6A285 /* GalleryViewController.m */,
-				E4D2013823948ED200BB7908 /* GalleryCollectionViewHandler.swift */,
-			);
-			path = GalleryViewController;
-			sourceTree = "<group>";
-		};
-		1C0608441E534AC000E6A285 /* GalleryCell */ = {
-			isa = PBXGroup;
-			children = (
-				1CFEE1E821CA76DD00D6010C /* GalleryCell.swift */,
-			);
-			path = GalleryCell;
-			sourceTree = "<group>";
-		};
-		1C0867F81E5C8F2100E361B5 /* SearchViewController */ = {
-			isa = PBXGroup;
-			children = (
-				1C0867F91E5C8F3D00E361B5 /* SearchViewController.h */,
-				1C0867FA1E5C8F3D00E361B5 /* SearchViewController.m */,
-			);
-			path = SearchViewController;
-			sourceTree = "<group>";
-		};
-		1C0867FC1E5C969200E361B5 /* SearchInfo */ = {
-			isa = PBXGroup;
-			children = (
-				1C0867FD1E5C96B100E361B5 /* SearchInfo.h */,
-				1C0867FE1E5C96B100E361B5 /* SearchInfo.m */,
-			);
-			path = SearchInfo;
-			sourceTree = "<group>";
-		};
-		1C0CF4951E82D449005ADDFA /* HistoriesViewController */ = {
-			isa = PBXGroup;
-			children = (
-				1C0CF4961E82D466005ADDFA /* HistoriesViewController.h */,
-				1C0CF4971E82D466005ADDFA /* HistoriesViewController.m */,
-			);
-			path = HistoriesViewController;
-			sourceTree = "<group>";
-		};
-		1C1AD0261E49B79800544217 = {
-			isa = PBXGroup;
-			children = (
-				1C1AD0311E49B79800544217 /* Dai-Hentai */,
-				1C1AD0301E49B79800544217 /* Products */,
-				32F097A2BD19786DC4F7D842 /* Pods */,
-				C560C138EFC548CADF211306 /* Frameworks */,
+				D41000000000000000000006 /* Dai-Hentai */,
+				D41000000000000000000007 /* Dai-HentaiUITests */,
+				D41000000000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		1C1AD0301E49B79800544217 /* Products */ = {
+		D41000000000000000000003 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1C1AD02F1E49B79800544217 /* Dai-Hentai.app */,
+				D41000000000000000000004 /* Dai-Hentai.app */,
+				D41000000000000000000005 /* Dai-HentaiUITests.xctest */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		1C1AD0311E49B79800544217 /* Dai-Hentai */ = {
-			isa = PBXGroup;
-			children = (
-				1C7CA7291E49BFB600D94CFB /* Models */,
-				1C7CA72A1E49BFB600D94CFB /* Views */,
-				1C7CA7281E49B95200D94CFB /* ViewControllers */,
-				1C4243EC21A450A800A2661A /* AppDelegate.swift */,
-				1C1AD03B1E49B79800544217 /* Main.storyboard */,
-				1C1AD03E1E49B79800544217 /* Assets.xcassets */,
-				1C1AD0401E49B79800544217 /* LaunchScreen.storyboard */,
-				1C1AD0431E49B79800544217 /* Info.plist */,
-				1CFE73121FFE32AE0018172F /* Dai-Hentai-Bridging-Header.h */,
-				1C1AD0321E49B79800544217 /* Supporting Files */,
-			);
-			path = "Dai-Hentai";
-			sourceTree = "<group>";
-		};
-		1C1AD0321E49B79800544217 /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				1C1AD0331E49B79800544217 /* main.m */,
-				1CA707141E85050D00AF24EF /* VersionGenerator.sh */,
-			);
-			name = "Supporting Files";
-			sourceTree = "<group>";
-		};
-		1C33D1061E5F34BC00F0EB12 /* SearchCategoryCell */ = {
-			isa = PBXGroup;
-			children = (
-				1C33D10F1E5F391A00F0EB12 /* SearchCategoryCell.h */,
-				1C33D1101E5F391A00F0EB12 /* SearchCategoryCell.m */,
-			);
-			path = SearchCategoryCell;
-			sourceTree = "<group>";
-		};
-		1C33D1071E5F34BC00F0EB12 /* SearchKeywordCell */ = {
-			isa = PBXGroup;
-			children = (
-				1C33D1081E5F34BC00F0EB12 /* SearchKeywordCell.h */,
-				1C33D1091E5F34BC00F0EB12 /* SearchKeywordCell.m */,
-			);
-			path = SearchKeywordCell;
-			sourceTree = "<group>";
-		};
-		1C33D10A1E5F34BC00F0EB12 /* SearchRatingCell */ = {
-			isa = PBXGroup;
-			children = (
-				1C33D10C1E5F35A600F0EB12 /* SearchRatingCell.h */,
-				1C33D10D1E5F35A600F0EB12 /* SearchRatingCell.m */,
-			);
-			path = SearchRatingCell;
-			sourceTree = "<group>";
-		};
-		1C3DDDFF1E6094A00034B3E2 /* SearchItem */ = {
-			isa = PBXGroup;
-			children = (
-				1C3DDE001E6094A00034B3E2 /* SearchItem.h */,
-				1C3DDE011E6094A00034B3E2 /* SearchItem.m */,
-			);
-			path = SearchItem;
-			sourceTree = "<group>";
-		};
-		1C4D8B261E861B2100113D0E /* NSTimer */ = {
-			isa = PBXGroup;
-			children = (
-				1C4D8B271E861B4100113D0E /* NSTimer+Block.h */,
-				1C4D8B281E861B4100113D0E /* NSTimer+Block.m */,
-			);
-			path = NSTimer;
-			sourceTree = "<group>";
-		};
-		1C4D8B2A1E861FF900113D0E /* UIAlertController */ = {
-			isa = PBXGroup;
-			children = (
-				1C4D8B2B1E86201100113D0E /* UIAlertController+Block.h */,
-				1C4D8B2C1E86201100113D0E /* UIAlertController+Block.m */,
-			);
-			path = UIAlertController;
-			sourceTree = "<group>";
-		};
-		1C5203A620543005000B6F45 /* CheckPageViewController */ = {
-			isa = PBXGroup;
-			children = (
-				1CD68E5F21BEB890004DF4A8 /* CheckPageViewController.swift */,
-			);
-			path = CheckPageViewController;
-			sourceTree = "<group>";
-		};
-		1C5BF263200CA3AE00FB260A /* DownloadedsViewController */ = {
-			isa = PBXGroup;
-			children = (
-				1C5BF264200CA3AE00FB260A /* DownloadedsViewController.h */,
-				1C5BF265200CA3AE00FB260A /* DownloadedsViewController.m */,
-			);
-			path = DownloadedsViewController;
-			sourceTree = "<group>";
-		};
-		1C630F07200502870068879F /* TabBarController */ = {
-			isa = PBXGroup;
-			children = (
-				1CD2400F21AC526100D074AB /* TabBarController.swift */,
-			);
-			path = TabBarController;
-			sourceTree = "<group>";
-		};
-		1C6A96A8204E428900151ECE /* SearchHintCell */ = {
-			isa = PBXGroup;
-			children = (
-				1C6A96A9204E42A800151ECE /* SearchHintCell.h */,
-				1C6A96AA204E42A800151ECE /* SearchHintCell.m */,
-			);
-			path = SearchHintCell;
-			sourceTree = "<group>";
-		};
-		1C7ABF5C2021BBF8006313C3 /* ReactiveCocoaMacros */ = {
-			isa = PBXGroup;
-			children = (
-				1C7ABF5D2021BBF8006313C3 /* EXTScope.h */,
-				1C7ABF5E2021BBF8006313C3 /* metamacros.h */,
-			);
-			path = ReactiveCocoaMacros;
-			sourceTree = "<group>";
-		};
-		1C7ABF5F2021C71D006313C3 /* SettingViewController */ = {
-			isa = PBXGroup;
-			children = (
-				1C7ABF602021C73F006313C3 /* SettingViewController.h */,
-				1CE09D332055777D0064D54B /* PrivateSettingViewController.h */,
-				1C7ABF612021C73F006313C3 /* SettingViewController.m */,
-				1CE09D3E20557C410064D54B /* ListAndAPIStatus */,
-				E48D1A6323576286005F1439 /* LoginUsingExKey */,
-				1CE09D3A20557B8C0064D54B /* SizeCalculator */,
-				1CE09D42205587CE0064D54B /* ScrollDirection */,
-				1CE09D4620558B640064D54B /* Lock */,
-			);
-			path = SettingViewController;
-			sourceTree = "<group>";
-		};
-		1C7CA7281E49B95200D94CFB /* ViewControllers */ = {
-			isa = PBXGroup;
-			children = (
-				1C630F07200502870068879F /* TabBarController */,
-				1CFE730C1FFE2A720018172F /* LoginViewController */,
-				1C5203A620543005000B6F45 /* CheckPageViewController */,
-				1C7CA72B1E49C10400D94CFB /* ListViewController */,
-				1CA192D21E926B3100D352B3 /* RelatedViewController */,
-				1C0867F81E5C8F2100E361B5 /* SearchViewController */,
-				1C0CF4951E82D449005ADDFA /* HistoriesViewController */,
-				1C5BF263200CA3AE00FB260A /* DownloadedsViewController */,
-				1C7ABF5F2021C71D006313C3 /* SettingViewController */,
-				1C0608401E53471100E6A285 /* GalleryViewController */,
-			);
-			path = ViewControllers;
-			sourceTree = "<group>";
-		};
-		1C7CA7291E49BFB600D94CFB /* Models */ = {
-			isa = PBXGroup;
-			children = (
-				1CAF38951E85623800A4C0DD /* Category */,
-				1C7CA72C1E49C13400D94CFB /* HentaiParser */,
-				1CE4D1B3200461C200F8B79A /* HentaiDownloadCenter */,
-				1CFE73101FFE328D0018172F /* ExCookieChecker */,
-				1CBF607F1E4D9ABC000CA9E5 /* FilesManager */,
-				1CEC12AE1E500E9A00F3E3C4 /* DaiStorage */,
-				1CEC12C41E500F4400F3E3C4 /* DaiStorageModels */,
-				1C3DDDFF1E6094A00034B3E2 /* SearchItem */,
-				1CE8E5DF1E4D7A03005B1B18 /* Couchbase */,
-				1C7ABF5C2021BBF8006313C3 /* ReactiveCocoaMacros */,
-				1CBBDB3F2032DAE700BC51BF /* AuthHelper */,
-				1CEE146E2056D819005983B0 /* Translator */,
-			);
-			path = Models;
-			sourceTree = "<group>";
-		};
-		1C7CA72A1E49BFB600D94CFB /* Views */ = {
-			isa = PBXGroup;
-			children = (
-				1C97CB2F1E5EBF00000A8874 /* SearchBaseCell */,
-				1C9294E91E4C49EC001AB1CE /* ListCell */,
-				1CCE36631E8E2D3F00A82935 /* MessageCell */,
-				1C0608441E534AC000E6A285 /* GalleryCell */,
-			);
-			path = Views;
-			sourceTree = "<group>";
-		};
-		1C7CA72B1E49C10400D94CFB /* ListViewController */ = {
-			isa = PBXGroup;
-			children = (
-				1C9294E61E4C4330001AB1CE /* ListViewController.h */,
-				1CAF38941E854B8500A4C0DD /* PrivateListViewController.h */,
-				1C9294E71E4C4330001AB1CE /* ListViewController.m */,
-			);
-			path = ListViewController;
-			sourceTree = "<group>";
-		};
-		1C7CA72C1E49C13400D94CFB /* HentaiParser */ = {
-			isa = PBXGroup;
-			children = (
-				1C7CA72D1E49C13400D94CFB /* HentaiParser.h */,
-				1C7CA72E1E49C13400D94CFB /* HentaiParser.m */,
-				1C000ED71E570F9C004060A5 /* ImageURLOperation.h */,
-				1C000ED81E570F9C004060A5 /* ImageURLOperation.m */,
-				1CA2707C1E50B9F80054AA6E /* EHentaiParser.h */,
-				1CA2707D1E50B9F80054AA6E /* EHentaiParser.m */,
-				1CA2707F1E50BA0B0054AA6E /* ExHentaiParser.h */,
-				1CA270801E50BA0B0054AA6E /* ExHentaiParser.m */,
-			);
-			path = HentaiParser;
-			sourceTree = "<group>";
-		};
-		1C9294E91E4C49EC001AB1CE /* ListCell */ = {
-			isa = PBXGroup;
-			children = (
-				1C6B0DD1236A9F5800F2CECA /* ListCell.swift */,
-			);
-			path = ListCell;
-			sourceTree = "<group>";
-		};
-		1C97CB2F1E5EBF00000A8874 /* SearchBaseCell */ = {
-			isa = PBXGroup;
-			children = (
-				1C6A96A8204E428900151ECE /* SearchHintCell */,
-				1C33D1061E5F34BC00F0EB12 /* SearchCategoryCell */,
-				1C33D1071E5F34BC00F0EB12 /* SearchKeywordCell */,
-				1C33D10A1E5F34BC00F0EB12 /* SearchRatingCell */,
-				1C97CB301E5EBF17000A8874 /* SearchBaseCell.h */,
-				1C97CB311E5EBF17000A8874 /* SearchBaseCell.m */,
-			);
-			path = SearchBaseCell;
-			sourceTree = "<group>";
-		};
-		1CA192D21E926B3100D352B3 /* RelatedViewController */ = {
-			isa = PBXGroup;
-			children = (
-				1CA192D31E926B4A00D352B3 /* RelatedViewController.h */,
-				1CA192D41E926B4A00D352B3 /* RelatedViewController.m */,
-			);
-			path = RelatedViewController;
-			sourceTree = "<group>";
-		};
-		1CA255F8203142E30040B73F /* UserPreference */ = {
-			isa = PBXGroup;
-			children = (
-				1CA255F9203143040040B73F /* UserPreference.h */,
-				1CA255FA203143040040B73F /* UserPreference.m */,
-			);
-			path = UserPreference;
-			sourceTree = "<group>";
-		};
-		1CAF38951E85623800A4C0DD /* Category */ = {
-			isa = PBXGroup;
-			children = (
-				1CD02DFA200C747D00B3F717 /* CBLDatabase */,
-				1C4D8B2A1E861FF900113D0E /* UIAlertController */,
-				1C4D8B261E861B2100113D0E /* NSTimer */,
-			);
-			path = Category;
-			sourceTree = "<group>";
-		};
-		1CBBDB3F2032DAE700BC51BF /* AuthHelper */ = {
-			isa = PBXGroup;
-			children = (
-				1C4632CB21A45C5F000D466F /* AuthHelper.swift */,
-			);
-			path = AuthHelper;
-			sourceTree = "<group>";
-		};
-		1CBF607F1E4D9ABC000CA9E5 /* FilesManager */ = {
-			isa = PBXGroup;
-			children = (
-				1CBF60801E4D9ABC000CA9E5 /* FilesManager.h */,
-				1CBF60811E4D9ABC000CA9E5 /* FilesManager.m */,
-				1CBF60821E4D9ABC000CA9E5 /* FMStream.h */,
-				1CBF60831E4D9ABC000CA9E5 /* FMStream.m */,
-			);
-			path = FilesManager;
-			sourceTree = "<group>";
-		};
-		1CCE36631E8E2D3F00A82935 /* MessageCell */ = {
-			isa = PBXGroup;
-			children = (
-				1CDF3909236AB55700C927A6 /* MessageCell.swift */,
-			);
-			path = MessageCell;
-			sourceTree = "<group>";
-		};
-		1CD02DFA200C747D00B3F717 /* CBLDatabase */ = {
-			isa = PBXGroup;
-			children = (
-				1CD02DFB200C749200B3F717 /* CBLDatabase+RefreshView.h */,
-				1CD02DFC200C749200B3F717 /* CBLDatabase+RefreshView.m */,
-			);
-			path = CBLDatabase;
-			sourceTree = "<group>";
-		};
-		1CE09D3A20557B8C0064D54B /* SizeCalculator */ = {
-			isa = PBXGroup;
-			children = (
-				1CE09D3C20557B8C0064D54B /* SettingViewController+SizeCalculator.h */,
-				1CE09D3B20557B8C0064D54B /* SettingViewController+SizeCalculator.m */,
-			);
-			path = SizeCalculator;
-			sourceTree = "<group>";
-		};
-		1CE09D3E20557C410064D54B /* ListAndAPIStatus */ = {
-			isa = PBXGroup;
-			children = (
-				1CE09D3F20557C710064D54B /* SettingViewController+ListAndAPIStatus.h */,
-				1CE09D4020557C710064D54B /* SettingViewController+ListAndAPIStatus.m */,
-			);
-			path = ListAndAPIStatus;
-			sourceTree = "<group>";
-		};
-		1CE09D42205587CE0064D54B /* ScrollDirection */ = {
-			isa = PBXGroup;
-			children = (
-				1CE09D43205587E50064D54B /* SettingViewController+ScrollDirection.h */,
-				1CE09D44205587E50064D54B /* SettingViewController+ScrollDirection.m */,
-			);
-			path = ScrollDirection;
-			sourceTree = "<group>";
-		};
-		1CE09D4620558B640064D54B /* Lock */ = {
-			isa = PBXGroup;
-			children = (
-				1CE09D4720558B760064D54B /* SettingViewController+Lock.h */,
-				1CE09D4820558B760064D54B /* SettingViewController+Lock.m */,
-			);
-			path = Lock;
-			sourceTree = "<group>";
-		};
-		1CE4D1B3200461C200F8B79A /* HentaiDownloadCenter */ = {
-			isa = PBXGroup;
-			children = (
-				1CE4D1B4200461E200F8B79A /* HentaiDownloadCenter.h */,
-				1CE4D1B5200461E200F8B79A /* HentaiDownloadCenter.m */,
-				1CE4D1B7200462ED00F8B79A /* HentaiImagesManager.h */,
-				1CE4D1B8200462ED00F8B79A /* HentaiImagesManager.m */,
-			);
-			path = HentaiDownloadCenter;
-			sourceTree = "<group>";
-		};
-		1CE8E5DF1E4D7A03005B1B18 /* Couchbase */ = {
-			isa = PBXGroup;
-			children = (
-				1C8DEE80200896B400C479F4 /* DBSearchSetting.h */,
-				1C8DEE81200896B400C479F4 /* DBSearchSetting.m */,
-				1C8DEE83200898E500C479F4 /* DBGalleryPage.h */,
-				1C8DEE84200898E500C479F4 /* DBGalleryPage.m */,
-				1C8DEE8620089A3100C479F4 /* DBGallery.h */,
-				1C8DEE8720089A3100C479F4 /* DBGallery.m */,
-				1CA255F5203142300040B73F /* DBUserPreference.h */,
-				1CA255F6203142300040B73F /* DBUserPreference.m */,
-			);
-			path = Couchbase;
-			sourceTree = "<group>";
-		};
-		1CEC12AE1E500E9A00F3E3C4 /* DaiStorage */ = {
-			isa = PBXGroup;
-			children = (
-				1CEC12AF1E500E9A00F3E3C4 /* Core */,
-				1CEC12B51E500E9A00F3E3C4 /* Utility */,
-			);
-			path = DaiStorage;
-			sourceTree = "<group>";
-		};
-		1CEC12AF1E500E9A00F3E3C4 /* Core */ = {
-			isa = PBXGroup;
-			children = (
-				1CEC12B01E500E9A00F3E3C4 /* DaiStorage.h */,
-				1CEC12B11E500E9A00F3E3C4 /* DaiStorage.m */,
-				1CEC12B21E500E9A00F3E3C4 /* DaiStorageArray.h */,
-				1CEC12B31E500E9A00F3E3C4 /* DaiStorageArray.m */,
-				1CEC12B41E500E9A00F3E3C4 /* DaiStorageDefine.h */,
-			);
-			path = Core;
-			sourceTree = "<group>";
-		};
-		1CEC12B51E500E9A00F3E3C4 /* Utility */ = {
-			isa = PBXGroup;
-			children = (
-				1CEC12B61E500E9A00F3E3C4 /* DaiStoragePath.h */,
-				1CEC12B71E500E9A00F3E3C4 /* DaiStoragePath.m */,
-				1CEC12B81E500E9A00F3E3C4 /* DaiStoragePropertiesInObject.h */,
-				1CEC12B91E500E9A00F3E3C4 /* DaiStoragePropertiesInObject.m */,
-				1CEC12BA1E500E9A00F3E3C4 /* DaiStorageProperty.h */,
-				1CEC12BB1E500E9A00F3E3C4 /* DaiStorageProperty.m */,
-				1CEC12BC1E500E9A00F3E3C4 /* DaiStorageTypeChecking.h */,
-				1CEC12BD1E500E9A00F3E3C4 /* DaiStorageTypeChecking.m */,
-			);
-			path = Utility;
-			sourceTree = "<group>";
-		};
-		1CEC12C41E500F4400F3E3C4 /* DaiStorageModels */ = {
-			isa = PBXGroup;
-			children = (
-				1C0867FC1E5C969200E361B5 /* SearchInfo */,
-				1CEC12C51E500F7B00F3E3C4 /* HentaiInfo */,
-				1CA255F8203142E30040B73F /* UserPreference */,
-			);
-			path = DaiStorageModels;
-			sourceTree = "<group>";
-		};
-		1CEC12C51E500F7B00F3E3C4 /* HentaiInfo */ = {
-			isa = PBXGroup;
-			children = (
-				1CEC12C61E500F9300F3E3C4 /* HentaiInfo.h */,
-				1CEC12C71E500F9300F3E3C4 /* HentaiInfo.m */,
-			);
-			path = HentaiInfo;
-			sourceTree = "<group>";
-		};
-		1CEE146E2056D819005983B0 /* Translator */ = {
-			isa = PBXGroup;
-			children = (
-				1CEE146F2056D834005983B0 /* Translator.h */,
-				1CEE14702056D834005983B0 /* Translator.m */,
-				1CEE14722056D84E005983B0 /* translator.json */,
-			);
-			path = Translator;
-			sourceTree = "<group>";
-		};
-		1CFE730C1FFE2A720018172F /* LoginViewController */ = {
-			isa = PBXGroup;
-			children = (
-				1C4632CD21A462CE000D466F /* LoginViewController.swift */,
-			);
-			path = LoginViewController;
-			sourceTree = "<group>";
-		};
-		1CFE73101FFE328D0018172F /* ExCookieChecker */ = {
-			isa = PBXGroup;
-			children = (
-				1C5DFDDE219BB7380044EDA9 /* ExCookie.swift */,
-			);
-			path = ExCookieChecker;
-			sourceTree = "<group>";
-		};
-		32F097A2BD19786DC4F7D842 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				19DB5C474C0FD71A14F15120 /* Pods-Dai-Hentai.debug.xcconfig */,
-				1A6E9F07B9A9588FE4ECFCA8 /* Pods-Dai-Hentai.release.xcconfig */,
-			);
-			name = Pods;
-			sourceTree = "<group>";
-		};
-		C560C138EFC548CADF211306 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				88F4AEC071F70AFD3813A609 /* libPods-Dai-Hentai.a */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		E48D1A6323576286005F1439 /* LoginUsingExKey */ = {
-			isa = PBXGroup;
-			children = (
-				E48D1A6823576554005F1439 /* SettingViewController+LoginUsingExKey.h */,
-				E48D1A662357652E005F1439 /* SettingViewController+LoginUsingExKey.m */,
-			);
-			path = LoginUsingExKey;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		1C1AD02E1E49B79800544217 /* Dai-Hentai */ = {
+		D41000000000000000000010 /* Dai-Hentai */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1C1AD0461E49B79800544217 /* Build configuration list for PBXNativeTarget "Dai-Hentai" */;
+			buildConfigurationList = D41000000000000000000014 /* Build configuration list for PBXNativeTarget "Dai-Hentai" */;
 			buildPhases = (
-				5F6B103CB5164C6D1B5F3CB2 /* [CP] Check Pods Manifest.lock */,
-				1C1AD02B1E49B79800544217 /* Sources */,
-				1C1AD02C1E49B79800544217 /* Frameworks */,
-				1C1AD02D1E49B79800544217 /* Resources */,
+				D41000000000000000000011 /* Sources */,
+				D41000000000000000000012 /* Frameworks */,
+				D41000000000000000000013 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
+			fileSystemSynchronizedGroups = (
+				D41000000000000000000006 /* Dai-Hentai */,
+			);
 			name = "Dai-Hentai";
+			packageProductDependencies = (
+				D41000000000000000000021 /* DaiHentaiUI */,
+				D41000000000000000000023 /* DaiHentaiCore */,
+			);
 			productName = "Dai-Hentai";
-			productReference = 1C1AD02F1E49B79800544217 /* Dai-Hentai.app */;
+			productReference = D41000000000000000000004 /* Dai-Hentai.app */;
 			productType = "com.apple.product-type.application";
+		};
+		D41000000000000000000030 /* Dai-HentaiUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D41000000000000000000034 /* Build configuration list for PBXNativeTarget "Dai-HentaiUITests" */;
+			buildPhases = (
+				D41000000000000000000031 /* Sources */,
+				D41000000000000000000032 /* Frameworks */,
+				D41000000000000000000033 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D41000000000000000000037 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D41000000000000000000007 /* Dai-HentaiUITests */,
+			);
+			name = "Dai-HentaiUITests";
+			productName = "Dai-HentaiUITests";
+			productReference = D41000000000000000000005 /* Dai-HentaiUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		1C1AD0271E49B79800544217 /* Project object */ = {
+		D41000000000000000000001 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1020;
-				ORGANIZATIONNAME = DaidoujiChen;
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
 				TargetAttributes = {
-					1C1AD02E1E49B79800544217 = {
-						CreatedOnToolsVersion = 8.2.1;
-						DevelopmentTeam = XLP7NJ2T65;
-						LastSwiftMigration = 1020;
-						ProvisioningStyle = Automatic;
+					D41000000000000000000010 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					D41000000000000000000030 = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = D41000000000000000000010;
 					};
 				};
 			};
-			buildConfigurationList = 1C1AD02A1E49B79800544217 /* Build configuration list for PBXProject "Dai-Hentai" */;
-			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = en;
+			buildConfigurationList = D41000000000000000000040 /* Build configuration list for PBXProject "Dai-Hentai" */;
+			developmentRegion = "zh-Hant";
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				en,
 				Base,
+				"zh-Hant",
 			);
-			mainGroup = 1C1AD0261E49B79800544217;
-			productRefGroup = 1C1AD0301E49B79800544217 /* Products */;
+			mainGroup = D41000000000000000000002;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D41000000000000000000020 /* XCLocalSwiftPackageReference "Packages/DaiHentaiKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = D41000000000000000000003 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				1C1AD02E1E49B79800544217 /* Dai-Hentai */,
+				D41000000000000000000010 /* Dai-Hentai */,
+				D41000000000000000000030 /* Dai-HentaiUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		1C1AD02D1E49B79800544217 /* Resources */ = {
+		D41000000000000000000013 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1C1AD0421E49B79800544217 /* LaunchScreen.storyboard in Resources */,
-				1CEE14732056D84E005983B0 /* translator.json in Resources */,
-				1C1AD03F1E49B79800544217 /* Assets.xcassets in Resources */,
-				1C1AD03D1E49B79800544217 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D41000000000000000000033 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		5F6B103CB5164C6D1B5F3CB2 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-Dai-Hentai-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
-		1C1AD02B1E49B79800544217 /* Sources */ = {
+		D41000000000000000000011 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1CFE73131FFE32AE0018172F /* Dai-Hentai-Bridging-Header.h in Sources */,
-				1CBF60841E4D9ABC000CA9E5 /* FilesManager.m in Sources */,
-				1CA255FB203143040040B73F /* UserPreference.m in Sources */,
-				1C1AD0341E49B79800544217 /* main.m in Sources */,
-				1C97CB321E5EBF17000A8874 /* SearchBaseCell.m in Sources */,
-				1C4632CC21A45C5F000D466F /* AuthHelper.swift in Sources */,
-				E48D1A672357652E005F1439 /* SettingViewController+LoginUsingExKey.m in Sources */,
-				1C0867FF1E5C96B100E361B5 /* SearchInfo.m in Sources */,
-				1CEC12C31E500E9A00F3E3C4 /* DaiStorageTypeChecking.m in Sources */,
-				1CBF60851E4D9ABC000CA9E5 /* FMStream.m in Sources */,
-				1CEC12C01E500E9A00F3E3C4 /* DaiStoragePath.m in Sources */,
-				1CD68E6021BEB890004DF4A8 /* CheckPageViewController.swift in Sources */,
-				1CD2401021AC526100D074AB /* TabBarController.swift in Sources */,
-				1C3DDE021E6094A00034B3E2 /* SearchItem.m in Sources */,
-				1CE09D4120557C710064D54B /* SettingViewController+ListAndAPIStatus.m in Sources */,
-				1C0867FB1E5C8F3D00E361B5 /* SearchViewController.m in Sources */,
-				1CE09D4920558B760064D54B /* SettingViewController+Lock.m in Sources */,
-				1CEC12C81E500F9300F3E3C4 /* HentaiInfo.m in Sources */,
-				E4D2013923948ED200BB7908 /* GalleryCollectionViewHandler.swift in Sources */,
-				1CE4D1B6200461E200F8B79A /* HentaiDownloadCenter.m in Sources */,
-				1CEE14712056D834005983B0 /* Translator.m in Sources */,
-				1CE4D1B9200462ED00F8B79A /* HentaiImagesManager.m in Sources */,
-				1C7ABF622021C73F006313C3 /* SettingViewController.m in Sources */,
-				1C33D10E1E5F35A600F0EB12 /* SearchRatingCell.m in Sources */,
-				1C9294E81E4C4330001AB1CE /* ListViewController.m in Sources */,
-				1C33D1111E5F391A00F0EB12 /* SearchCategoryCell.m in Sources */,
-				1C4D8B291E861B4100113D0E /* NSTimer+Block.m in Sources */,
-				1CEC12C21E500E9A00F3E3C4 /* DaiStorageProperty.m in Sources */,
-				1C000ED91E570F9C004060A5 /* ImageURLOperation.m in Sources */,
-				1C5BF266200CA3AE00FB260A /* DownloadedsViewController.m in Sources */,
-				1C0608431E53473500E6A285 /* GalleryViewController.m in Sources */,
-				1C4D8B2D1E86201100113D0E /* UIAlertController+Block.m in Sources */,
-				1CEC12C11E500E9A00F3E3C4 /* DaiStoragePropertiesInObject.m in Sources */,
-				1C4243ED21A450A800A2661A /* AppDelegate.swift in Sources */,
-				1CE09D45205587E50064D54B /* SettingViewController+ScrollDirection.m in Sources */,
-				1CE09D3D20557B8C0064D54B /* SettingViewController+SizeCalculator.m in Sources */,
-				1C7CA72F1E49C13400D94CFB /* HentaiParser.m in Sources */,
-				1CD02DFD200C749200B3F717 /* CBLDatabase+RefreshView.m in Sources */,
-				1CA255F7203142300040B73F /* DBUserPreference.m in Sources */,
-				1CEC12BF1E500E9A00F3E3C4 /* DaiStorageArray.m in Sources */,
-				1CDF390A236AB55700C927A6 /* MessageCell.swift in Sources */,
-				1C4632CE21A462CE000D466F /* LoginViewController.swift in Sources */,
-				1C6A96AB204E42A800151ECE /* SearchHintCell.m in Sources */,
-				1CA192D51E926B4A00D352B3 /* RelatedViewController.m in Sources */,
-				1C6B0DD2236A9F5800F2CECA /* ListCell.swift in Sources */,
-				1C0CF4981E82D466005ADDFA /* HistoriesViewController.m in Sources */,
-				1CFEE1E921CA76DD00D6010C /* GalleryCell.swift in Sources */,
-				1CA2707E1E50B9F80054AA6E /* EHentaiParser.m in Sources */,
-				1C5DFDDF219BB7380044EDA9 /* ExCookie.swift in Sources */,
-				1C8DEE8820089A3100C479F4 /* DBGallery.m in Sources */,
-				1C33D10B1E5F34BC00F0EB12 /* SearchKeywordCell.m in Sources */,
-				1C8DEE85200898E500C479F4 /* DBGalleryPage.m in Sources */,
-				1C8DEE82200896B400C479F4 /* DBSearchSetting.m in Sources */,
-				1CA270811E50BA0B0054AA6E /* ExHentaiParser.m in Sources */,
-				1CEC12BE1E500E9A00F3E3C4 /* DaiStorage.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D41000000000000000000031 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXVariantGroup section */
-		1C1AD03B1E49B79800544217 /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1C1AD03C1E49B79800544217 /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
+/* Begin PBXTargetDependency section */
+		D41000000000000000000037 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D41000000000000000000010 /* Dai-Hentai */;
+			targetProxy = D41000000000000000000038 /* PBXContainerItemProxy */;
 		};
-		1C1AD0401E49B79800544217 /* LaunchScreen.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1C1AD0411E49B79800544217 /* Base */,
-			);
-			name = LaunchScreen.storyboard;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		1C1AD0441E49B79800544217 /* Debug */ = {
+		D41000000000000000000041 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = XLP7NJ2T65;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_NO_COMMON_BLOCKS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
 				);
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
-				MTL_ENABLE_DEBUG_INFO = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
-		1C1AD0451E49B79800544217 /* Release */ = {
+		D41000000000000000000042 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = XLP7NJ2T65;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
-				MTL_ENABLE_DEBUG_INFO = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
-		1C1AD0471E49B79800544217 /* Debug */ = {
+		D41000000000000000000015 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 19DB5C474C0FD71A14F15120 /* Pods-Dai-Hentai.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "Apple Development";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20241103;
-				DEVELOPMENT_TEAM = XLP7NJ2T65;
+				CURRENT_PROJECT_VERSION = 20260928;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Dai-Hentai/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 3.12;
+				INFOPLIST_KEY_CFBundleDisplayName = "萌萌噠";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "上鎖後需要用 Face ID 解鎖才能使用萌萌噠呦 O3O";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "把喜歡的圖片存到照片裡呦 O3Ob";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "tw.daidouji.Dai-Hentai";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_OBJC_BRIDGING_HEADER = "Dai-Hentai/Dai-Hentai-Bridging-Header.h";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
-		1C1AD0481E49B79800544217 /* Release */ = {
+		D41000000000000000000016 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1A6E9F07B9A9588FE4ECFCA8 /* Pods-Dai-Hentai.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "Apple Development";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20241103;
-				DEVELOPMENT_TEAM = XLP7NJ2T65;
+				CURRENT_PROJECT_VERSION = 20260928;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Dai-Hentai/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 3.12;
+				INFOPLIST_KEY_CFBundleDisplayName = "萌萌噠";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "上鎖後需要用 Face ID 解鎖才能使用萌萌噠呦 O3O";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "把喜歡的圖片存到照片裡呦 O3Ob";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "tw.daidouji.Dai-Hentai";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_OBJC_BRIDGING_HEADER = "Dai-Hentai/Dai-Hentai-Bridging-Header.h";
-				SWIFT_VERSION = 5.0;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D41000000000000000000035 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "tw.daidouji.Dai-HentaiUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "Dai-Hentai";
+			};
+			name = Debug;
+		};
+		D41000000000000000000036 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "tw.daidouji.Dai-HentaiUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "Dai-Hentai";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1C1AD02A1E49B79800544217 /* Build configuration list for PBXProject "Dai-Hentai" */ = {
+		D41000000000000000000014 /* Build configuration list for PBXNativeTarget "Dai-Hentai" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				1C1AD0441E49B79800544217 /* Debug */,
-				1C1AD0451E49B79800544217 /* Release */,
+				D41000000000000000000015 /* Debug */,
+				D41000000000000000000016 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1C1AD0461E49B79800544217 /* Build configuration list for PBXNativeTarget "Dai-Hentai" */ = {
+		D41000000000000000000034 /* Build configuration list for PBXNativeTarget "Dai-HentaiUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				1C1AD0471E49B79800544217 /* Debug */,
-				1C1AD0481E49B79800544217 /* Release */,
+				D41000000000000000000035 /* Debug */,
+				D41000000000000000000036 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D41000000000000000000040 /* Build configuration list for PBXProject "Dai-Hentai" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D41000000000000000000041 /* Debug */,
+				D41000000000000000000042 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		D41000000000000000000020 /* XCLocalSwiftPackageReference "Packages/DaiHentaiKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/DaiHentaiKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D41000000000000000000021 /* DaiHentaiUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DaiHentaiUI;
+		};
+		D41000000000000000000023 /* DaiHentaiCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DaiHentaiCore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
-	rootObject = 1C1AD0271E49B79800544217 /* Project object */;
+	rootObject = D41000000000000000000001 /* Project object */;
 }

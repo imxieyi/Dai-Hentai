@@ -1,0 +1,27 @@
+{
+  "configurations": [
+    {
+      "id": "5E0B6C1A-6C2F-4B4D-9D7A-2B5F3E1D0A01",
+      "name": "Default",
+      "options": {}
+    }
+  ],
+  "defaultOptions": {
+    "targetForVariableExpansion": {
+      "containerPath": "container:Dai-Hentai.xcodeproj",
+      "identifier": "D41000000000000000000010",
+      "name": "Dai-Hentai"
+    }
+  },
+  "testTargets": [
+    {
+      "parallelizable": false,
+      "target": {
+        "containerPath": "container:Dai-Hentai.xcodeproj",
+        "identifier": "D41000000000000000000030",
+        "name": "Dai-HentaiUITests"
+      }
+    }
+  ],
+  "version": 1
+}

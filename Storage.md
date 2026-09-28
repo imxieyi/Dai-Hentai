@@ -1,8 +1,31 @@
 # 儲存內容文件
 因為都是隔一段時間隔一段時間在寫, 所以每次都不記得儲存的內容, 然後製作這份文件, =w=.
 
-## 資料庫存放
-目前分別把資料存放在三個 NoSQL db 裡面, 分別是
+## 4.0: SwiftData
+
+4.0 改用 SwiftData, 資料庫是 `Application Support/Library.store`, schema 定義在
+`Packages/DaiHentaiKit/Sources/DaiHentaiCore/Persistence/LibrarySchema.swift` (`LibrarySchemaV1`, 之後改格式要加新版本跟 migration stage).
+
+| Model | 取代 3.x 的 | Key | 內容 |
+|---|---|---|---|
+| `StoredGallery` | `histories` | `gid-token` (unique) | 作品資訊、`lastReadPage` (看到第幾頁, 從 1 開始, 0 = 沒看過)、`lastViewedAt`、`isDownloaded`、`downloadedAt` |
+| `StoredPageList` | `galleries` | `gid-token-index` (unique) | 某一頁縮圖頁裡的圖片頁網址, 避免反覆 parse |
+| `StoredSearchFilter` | `search` | 只有一筆 | 關鍵字、評分要求、語言 (`any` / `chineseOnly` / `originalOnly`)、勾選的類別 |
+| `StoredPreferences` | `preference` | 只有一筆 | 閱讀方向、App 上鎖、點列表先跳出作品卡、切換 App 時遮住畫面 |
+
+歷史 = `isDownloaded == false` 的作品, 下載 = `isDownloaded == true`, 跟 3.x 一樣是同一個作品只存一份.
+
+### 從 3.x 搬家
+第一次打開 4.0 時, `LegacyCouchbaseImporter` 會直接用 SQLite 讀 `Application Support/CouchbaseLite/<名稱>.cblite2/db.sqlite3`
+(`revs` 表裡 `current = 1 AND deleted = 0` 的 JSON), 轉成上面的 model. 舊檔案不會被刪掉, 搬完會在 `UserDefaults` 記一個
+`didImportCouchbaseLite`, 之後就不會再搬. 下面是 3.x 的格式, 也就是搬家時讀的內容.
+
+## 圖片存放 (3.x 與 4.0 相同)
+放在 `Documents` 資料夾下, 資料夾名稱是作品名稱 (有日文名稱用日文, 否則用英文, `/` 換成 `-`), 圖片名稱則為 `gid-頁數` (從 1 開始).
+4.0 沿用同樣的規則, 所以舊版下載好的圖片可以直接看. 只有超過檔案系統長度限制 (3.x 會存檔失敗) 的名稱會被截短並加上 `-gid`.
+
+## 3.x 資料庫存放 (Couchbase Lite)
+3.x 分別把資料存放在四個 NoSQL db 裡面, 分別是
 
 ### galleries
 做為存放某一個頁面裡面的圖片資訊, 以網址 `https://e-hentai.org/g/1166044/2227d8d6a0/?p=0` 為例, 我們會存入這樣的內容
@@ -111,5 +134,5 @@
 在這邊 gid + token 被拿來當作 key 值, 同一部作品, 只會有一組絕對的 gid + token, 額外的, 這個內容裡面, 存了使用者看到第幾頁, 方便下次觀看時
 , 跳到相對應的地方.
 
-## 圖片存放
-放在 `Documents` 資料夾下, 直接使用作品名稱當做資料夾名稱, 圖片名稱則為 gid + index.
+### preference
+使用者設定, 只有唯一的一組. `scrollDirection` 為 `UICollectionViewScrollDirection` (0 = 上下, 1 = 左右), `isLockThisApp` 為是否上鎖.
