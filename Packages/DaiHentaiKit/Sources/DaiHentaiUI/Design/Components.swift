@@ -103,11 +103,11 @@ struct CategoryChip: View {
         .padding(.vertical, 3)
         .background((category?.swatch ?? .gray).opacity(0.16), in: .capsule)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(category.map { "\($0.rawValue) \($0.chineseName)" } ?? categoryName)
+        .accessibilityLabel(category?.spokenName ?? categoryName)
     }
 }
 
-/// 中文 / 日文 / 英文… plus 翻譯, from `language:` tags.
+/// 中文 / 日文 / 英文… plus 翻譯, from `language:` tags, named in the app's language.
 struct LanguagePill: View {
     let tags: [String]
 
@@ -128,18 +128,16 @@ struct LanguagePill: View {
             guard tag.hasPrefix("language:") else { return nil }
             return String(tag.dropFirst("language:".count))
         }
-        let names: [String: String] = [
-            "chinese": "中文", "japanese": "日文", "english": "英文", "korean": "韓文",
-            "spanish": "西班牙文", "french": "法文", "russian": "俄文", "thai": "泰文",
+        let codes: [String: String] = [
+            "chinese": "zh", "japanese": "ja", "english": "en", "korean": "ko", "spanish": "es",
+            "french": "fr", "russian": "ru", "thai": "th", "german": "de", "italian": "it",
+            "portuguese": "pt", "vietnamese": "vi", "indonesian": "id", "polish": "pl",
         ]
-        let primary = languages.compactMap { names[$0] }.first
-        let translated = languages.contains("translated")
-        switch (primary, translated) {
-        case let (name?, true): return "\(name) · 翻譯"
-        case let (name?, false): return name
-        case (nil, true): return "翻譯"
-        default: return nil
-        }
+        let locale = AppLanguage.locale
+        let primary = languages.lazy.compactMap { codes[$0].flatMap { locale.localizedString(forLanguageCode: $0) } }.first
+        let translated = languages.contains("translated") ? String(localized: .languageTranslated) : nil
+        let parts = [primary, translated].compactMap(\.self)
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 }
 
@@ -168,7 +166,7 @@ struct RatingView: View {
         }
         .font(.subheadline.weight(.semibold))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("評分 \(rating.formatted(.number.precision(.fractionLength(1)))) 顆星")
+        .accessibilityLabel(.ratingAccessibility(rating.formatted(.number.precision(.fractionLength(1)))))
     }
 
     private func symbol(for index: Int) -> String {
@@ -269,8 +267,8 @@ struct FlowLayout: Layout {
 /// Big kaomoji empty / error state.
 struct KaomojiState<Actions: View>: View {
     let kaomoji: String
-    let title: String
-    var message: String?
+    let title: LocalizedStringResource
+    var message: LocalizedStringResource?
     @ViewBuilder var actions: () -> Actions
 
     @ScaledMetric(relativeTo: .largeTitle) private var heroSize: CGFloat = 56
@@ -283,7 +281,7 @@ struct KaomojiState<Actions: View>: View {
                 Text(title)
                     .font(.title3.weight(.semibold))
                     .fontDesign(.rounded)
-                    .accessibilityLabel(title.spoken)
+                    .accessibilityLabel(String(localized: title).spoken)
             }
         } description: {
             if let message { Text(message) }
@@ -294,14 +292,14 @@ struct KaomojiState<Actions: View>: View {
 }
 
 extension KaomojiState where Actions == EmptyView {
-    init(kaomoji: String, title: String, message: String? = nil) {
+    init(kaomoji: String, title: LocalizedStringResource, message: LocalizedStringResource? = nil) {
         self.init(kaomoji: kaomoji, title: title, message: message) { EmptyView() }
     }
 }
 
 /// Footer row for paging lists ("列表載入中...", "沒有更多作品囉 O3O", ...).
 struct FooterRow: View {
-    let text: String
+    let text: LocalizedStringResource
     var showsSpinner = false
     var action: (() -> Void)?
 
@@ -327,13 +325,13 @@ struct FooterRow: View {
                 .foregroundStyle(action == nil ? Color.secondary : Color.moeAccent)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(text.spoken)
+        .accessibilityLabel(String(localized: text).spoken)
     }
 }
 
 /// Blocking progress HUD ("作品刪除中 ( i / n )").
 struct GlassHUD: View {
-    let title: String
+    let title: LocalizedStringResource
     let progress: Double
 
     var body: some View {
@@ -359,7 +357,7 @@ struct GlassHUD: View {
 /// Diagnostic status with symbol + word (colour is never the only signal).
 struct StatusBadge: View {
     let status: ProbeStatus
-    var parseFailureText: String?
+    var parseFailureText: LocalizedStringResource?
 
     var body: some View {
         HStack(spacing: 5) {

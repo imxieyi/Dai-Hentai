@@ -46,7 +46,7 @@ struct BottomAccessory: View {
             .animation(.smooth, value: progress)
 
             VStack(alignment: .leading, spacing: 1) {
-                Text(count > 1 ? "下載中 \(count) 部" : "下載中")
+                Text(count > 1 ? LocalizedStringResource.accessoryDownloadingCount(count) : .commonDownloading)
                     .font(.subheadline.weight(.semibold))
                 if !isInline {
                     Text(title)
@@ -64,8 +64,8 @@ struct BottomAccessory: View {
         }
         .contentShape(.rect)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("下載中 \(count) 部, \(progress.formatted(.percent.precision(.fractionLength(0))))")
-        .accessibilityHint("打開下載")
+        .accessibilityLabel(.accessoryDownloadingAccessibility(count, progress.formatted(.percent.precision(.fractionLength(0)))))
+        .accessibilityHint(Text(.accessoryOpenDownloads))
     }
 
     private func resume(_ gallery: GalleryInfo, page: Int) -> some View {
@@ -74,7 +74,7 @@ struct BottomAccessory: View {
                 .foregroundStyle(Color.moeAccent)
                 .frame(width: 22)
             VStack(alignment: .leading, spacing: 1) {
-                Text(isInline ? "繼續看 第 \(page) 頁" : "繼續看")
+                Text(isInline ? LocalizedStringResource.accessoryResumePage(page) : .accessoryResume)
                     .font(.subheadline.weight(.semibold))
                 if !isInline {
                     Text(gallery.bestTitle)
@@ -86,7 +86,7 @@ struct BottomAccessory: View {
             }
             Spacer(minLength: 4)
             if !isInline {
-                Text(gallery.fileCount > 0 ? "\(page) / \(gallery.fileCount)" : "第 \(page) 頁")
+                (gallery.fileCount > 0 ? Text(verbatim: "\(page) / \(gallery.fileCount)") : Text(.commonPageNumber(page)))
                     .font(.subheadline.weight(.medium))
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
@@ -97,7 +97,7 @@ struct BottomAccessory: View {
         }
         .contentShape(.rect)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("繼續看 \(gallery.bestTitle), 第 \(page) 頁")
+        .accessibilityLabel(.accessoryResumeAccessibility(gallery.bestTitle, page))
     }
 
     private func activate() {

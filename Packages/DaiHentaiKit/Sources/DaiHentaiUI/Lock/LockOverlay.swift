@@ -67,10 +67,10 @@ struct LockScreen: View {
                 .accessibilityHidden(true)
 
                 VStack(spacing: 8) {
-                    Text("萌萌噠")
+                    Text(.lockAppName)
                         .font(.largeTitle.weight(.bold))
                         .fontDesign(.rounded)
-                    Text("使用這個 App 需要先解鎖呦")
+                    Text(.lockMessage)
                         .font(.headline)
                         .foregroundStyle(.secondary)
                     if let message = lock.message {
@@ -90,7 +90,7 @@ struct LockScreen: View {
                 Button {
                     Task { await lock.unlock() }
                 } label: {
-                    Label("解鎖", systemImage: lock.biometricKind.symbolName)
+                    Label(.lockUnlock, systemImage: lock.biometricKind.symbolName)
                         .font(.headline)
                         .frame(minWidth: 180)
                         .padding(.vertical, 6)

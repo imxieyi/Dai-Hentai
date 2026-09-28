@@ -18,8 +18,8 @@ struct ReaderBottomBar: View {
                         .frame(width: 24, height: 24)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("滑動方向切換")
-                .accessibilityValue(reader.direction.title)
+                .accessibilityLabel(.readerScrollDirection)
+                .accessibilityValue(Text(reader.direction.title))
                 .accessibilityIdentifier("directionToggle")
 
                 PageScrubber(
@@ -31,7 +31,7 @@ struct ReaderBottomBar: View {
                     reader.jump(to: page)
                 }
 
-                Text("\(shownPage) / \(reader.pageCount)")
+                Text(verbatim: "\(shownPage) / \(reader.pageCount)")
                     .font(.subheadline.weight(.semibold))
                     .monospacedDigit()
                     .contentTransition(.numericText())
@@ -88,7 +88,7 @@ struct PageScrubber: View {
                     .offset(x: x - (dragPage == nil ? 9 : 12))
                     .animation(.snappy(duration: 0.15), value: dragPage == nil)
                 if let dragPage {
-                    Text("第 \(dragPage + 1) 頁")
+                    Text(.commonPageNumber(dragPage + 1))
                         .font(.caption.weight(.semibold))
                         .monospacedDigit()
                         .padding(.horizontal, 8)
@@ -120,9 +120,9 @@ struct PageScrubber: View {
                 in: 1...Double(max(pageCount, 2)),
                 step: 1
             ) {
-                Text("頁數")
+                Text(.readerPageLabel)
             }
-            .accessibilityValue("第 \(current + 1) 頁, 共 \(pageCount) 頁")
+            .accessibilityValue(Text(.readerPageValue(current + 1, pageCount)))
         }
         .accessibilityIdentifier("pageScrubber")
     }
@@ -149,17 +149,17 @@ struct ResumeBanner: View {
             HStack(spacing: 8) {
                 Kaomoji(text: "O3O", style: .headline.weight(.bold))
                     .foregroundStyle(Color.moeAccent)
-                Text("您曾經閱讀過此作品")
+                Text(.readerReadBefore)
                     .font(.headline)
             }
             HStack(spacing: 10) {
                 Button(action: resume) {
-                    Text("繼續從 \(page) 頁看起").frame(maxWidth: .infinity)
+                    Text(.commonResumeFromPage(page)).frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.glassProminent)
                 .accessibilityIdentifier("bannerResumeButton")
                 Button(action: fromStart) {
-                    Text("我要從頭看").frame(maxWidth: .infinity)
+                    Text(.commonReadFromStart).frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.glass)
             }
@@ -178,7 +178,7 @@ struct PagePill: View {
     let count: Int
 
     var body: some View {
-        Text("\(page) / \(count)")
+        Text(verbatim: "\(page) / \(count)")
             .font(.footnote.weight(.semibold))
             .monospacedDigit()
             .contentTransition(.numericText())

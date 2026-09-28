@@ -30,7 +30,7 @@ struct GallerySheet: View {
             }
             .scrollBounceBehavior(.basedOnSize)
             .toolbarVisibility(.hidden, for: .navigationBar)
-            .navigationTitle("作品卡")
+            .navigationTitle(.cardTitle)
             .navigationDestination(for: RelatedRoute.self) { related in
                 RelatedWordsView(gallery: gallery, preselected: related.word)
             }
@@ -62,7 +62,7 @@ struct GallerySheet: View {
             HStack(spacing: 6) {
                 Kaomoji(text: "O3O", style: .headline.weight(.bold))
                     .foregroundStyle(Color.moeAccent)
-                Text(gallery.fileCount > 0 ? "這部作品有 \(gallery.fileCount) 頁呦" : "這部作品頁數還不知道呦")
+                Text(gallery.fileCount > 0 ? LocalizedStringResource.cardPageCount(gallery.fileCount) : .cardPageCountUnknown)
                     .font(.headline)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -73,14 +73,14 @@ struct GallerySheet: View {
                     Button {
                         model.router.openReader(gallery, startPage: lastPage)
                     } label: {
-                        Text("繼續從 \(lastPage) 頁看起").frame(maxWidth: .infinity)
+                        Text(.commonResumeFromPage(lastPage)).frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                     .accessibilityIdentifier("resumeButton")
                     Button {
                         model.router.openReader(gallery, startPage: 1)
                     } label: {
-                        Text("我要從頭看").frame(maxWidth: .infinity)
+                        Text(.commonReadFromStart).frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
                 }
@@ -88,7 +88,7 @@ struct GallerySheet: View {
                 Button {
                     model.router.openReader(gallery, startPage: 1)
                 } label: {
-                    Text("我要現在看").frame(maxWidth: .infinity)
+                    Text(.commonReadNow).frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
                 .accessibilityIdentifier("readNowButton")
@@ -98,7 +98,7 @@ struct GallerySheet: View {
                 if let progress {
                     Button {} label: {
                         HStack {
-                            Text("下載中")
+                            Text(.commonDownloading)
                             Text(progress, format: .percent.precision(.fractionLength(0)))
                                 .monospacedDigit()
                                 .contentTransition(.numericText())
@@ -109,7 +109,7 @@ struct GallerySheet: View {
                     .allowsHitTesting(false)
                 } else if isDownloaded {
                     Button {} label: {
-                        Label("已下載", systemImage: "checkmark.circle.fill").frame(maxWidth: .infinity)
+                        Label(.commonDownloaded, systemImage: "checkmark.circle.fill").frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
                     .disabled(true)
@@ -117,7 +117,7 @@ struct GallerySheet: View {
                     Button {
                         model.download(gallery)
                     } label: {
-                        Text("我要下載").frame(maxWidth: .infinity)
+                        Text(.commonWantDownload).frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
                     .accessibilityIdentifier("downloadButton")
@@ -128,7 +128,7 @@ struct GallerySheet: View {
             Button {
                 path.append(RelatedRoute(word: nil))
             } label: {
-                Text("用相關字詞搜尋").frame(maxWidth: .infinity)
+                Text(.commonSearchRelated).frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
             .accessibilityIdentifier("relatedButton")
@@ -136,9 +136,9 @@ struct GallerySheet: View {
             Button {
                 dismiss()
             } label: {
-                Text("都不要 O3O")
+                Text(.cardDismiss)
                     .frame(maxWidth: .infinity)
-                    .accessibilityLabel("都不要")
+                    .accessibilityLabel(.cardDismissAccessibility)
             }
             .buttonStyle(.borderless)
             .accessibilityIdentifier("dismissCardButton")
@@ -154,13 +154,13 @@ struct GallerySheet: View {
             if !gallery.uploader.isEmpty || !gallery.posted.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
                     if !gallery.uploader.isEmpty {
-                        LabeledContent("上傳者", value: gallery.uploader)
+                        LabeledContent(.cardUploader, value: gallery.uploader)
                     }
                     if !gallery.posted.isEmpty {
-                        LabeledContent("上傳時間", value: gallery.posted)
+                        LabeledContent(.cardPosted, value: gallery.posted)
                     }
                     if !gallery.fileSize.isEmpty {
-                        LabeledContent("大小", value: gallery.fileSize)
+                        LabeledContent(.cardSize, value: gallery.fileSize)
                     }
                 }
                 .font(.subheadline)
@@ -229,7 +229,7 @@ struct GalleryHeader: View {
     }
 
     private var statLine: String {
-        [gallery.fileCount > 0 ? "\(gallery.fileCount) 頁" : nil, gallery.posted.isEmpty ? nil : String(gallery.posted.prefix(10))]
+        [gallery.fileCount > 0 ? String(localized: .commonPageCount(gallery.fileCount)) : nil, gallery.posted.isEmpty ? nil : String(gallery.posted.prefix(10))]
             .compactMap { $0 }
             .joined(separator: " · ")
     }
@@ -247,15 +247,15 @@ struct TagMenu: View {
 
     var body: some View {
         Menu {
-            Button("用這個 Tag 搜尋", systemImage: "magnifyingglass") {
+            Button(.cardSearchTag, systemImage: "magnifyingglass") {
                 model.search(keyword: SearchHints.searchToken(fullTag))
             }
-            Button("挑更多相關字詞…", systemImage: "checklist") {
+            Button(.cardPickRelated, systemImage: "checklist") {
                 pickMore(fullTag)
             }
-            Button("拷貝", systemImage: "doc.on.doc") {
+            Button(.cardCopy, systemImage: "doc.on.doc") {
                 UIPasteboard.general.string = value
-                model.toasts.show("拷貝好了", kaomoji: "O3Ob")
+                model.toasts.show(.toastCopied, kaomoji: "O3Ob")
             }
         } label: {
             HStack(spacing: 4) {

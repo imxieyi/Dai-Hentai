@@ -15,26 +15,26 @@ struct RelatedWordsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 if !gallery.engTitleWords.isEmpty {
-                    section("英文名稱切碎", words: gallery.engTitleWords)
+                    section(.relatedEnglishWords, words: gallery.engTitleWords)
                 }
                 if !gallery.jpnTitleWords.isEmpty {
-                    section("日文名稱切碎", words: gallery.jpnTitleWords, japanese: true)
+                    section(.relatedJapaneseWords, words: gallery.jpnTitleWords, japanese: true)
                 }
                 if !gallery.tags.isEmpty {
-                    section("Tags", words: gallery.tags)
+                    section(.relatedTags, words: gallery.tags)
                 }
             }
             .padding(20)
         }
-        .navigationTitle("相關字詞")
+        .navigationTitle(.relatedTitle)
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaBar(edge: .bottom) {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("將搜尋：")
+                    Text(.commonWillSearch)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text(keyword.isEmpty ? "還沒有選字呦" : keyword)
+                    (keyword.isEmpty ? Text(.relatedNothingPicked) : Text(verbatim: keyword))
                         .font(.subheadline.weight(.medium))
                         .lineLimit(2)
                         .foregroundStyle(keyword.isEmpty ? .secondary : .primary)
@@ -42,7 +42,7 @@ struct RelatedWordsView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityElement(children: .combine)
-                Button("好") {
+                Button(.commonOkay) {
                     model.search(keyword: keyword)
                 }
                 .buttonStyle(.borderedProminent)
@@ -58,7 +58,7 @@ struct RelatedWordsView: View {
         }
     }
 
-    private func section(_ title: String, words: [String], japanese: Bool = false) -> some View {
+    private func section(_ title: LocalizedStringResource, words: [String], japanese: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(.footnote.weight(.semibold))

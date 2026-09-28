@@ -8,13 +8,13 @@ public enum ProbeStatus: Sendable, Equatable {
     case networkFailed
     case notLoggedIn
 
-    public var title: String {
+    public var title: LocalizedStringResource {
         switch self {
-        case .testing: "測試中..."
-        case .success: "成功"
-        case .parseFailed: "解析失敗"
-        case .networkFailed: "網路錯誤"
-        case .notLoggedIn: "未登入 EX"
+        case .testing: .probeTesting
+        case .success: .probeSuccess
+        case .parseFailed: .probeParseFailed
+        case .networkFailed: .probeNetworkFailed
+        case .notLoggedIn: .probeNotLoggedIn
         }
     }
 

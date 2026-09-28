@@ -33,20 +33,20 @@ private struct MainTabs: View {
     var body: some View {
         @Bindable var router = model.router
         TabView(selection: $router.tab) {
-            Tab("列表", systemImage: "list.bullet.rectangle.portrait", value: AppTab.list) {
+            Tab(.tabList, systemImage: "list.bullet.rectangle.portrait", value: AppTab.list) {
                 ListTab()
             }
             .accessibilityIdentifier("tab.list")
-            Tab("歷史", systemImage: "clock.arrow.circlepath", value: AppTab.history) {
+            Tab(.tabHistory, systemImage: "clock.arrow.circlepath", value: AppTab.history) {
                 HistoryTab()
             }
             .accessibilityIdentifier("tab.history")
-            Tab("下載", systemImage: "arrow.down.circle", value: AppTab.downloads) {
+            Tab(.tabDownloads, systemImage: "arrow.down.circle", value: AppTab.downloads) {
                 DownloadsTab()
             }
             .badge(model.downloads.activeDownloads.count)
             .accessibilityIdentifier("tab.downloads")
-            Tab("設定", systemImage: "gearshape", value: AppTab.settings) {
+            Tab(.tabSettings, systemImage: "gearshape", value: AppTab.settings) {
                 SettingsTab()
             }
             .accessibilityIdentifier("tab.settings")
@@ -79,7 +79,7 @@ private struct MainTabs: View {
         }
         .onChange(of: model.downloads.lastFinished) { _, finished in
             guard let finished else { return }
-            model.toasts.show("「\(finished.bestTitle)」下載完成囉", kaomoji: "O3Ob", symbol: "checkmark.circle.fill")
+            model.toasts.show(.toastDownloadFinished(finished.bestTitle), kaomoji: "O3Ob", symbol: "checkmark.circle.fill")
         }
         .sensoryFeedback(.success, trigger: model.downloads.lastFinished)
         .sensoryFeedback(.start, trigger: model.downloads.activeDownloads.count) { old, new in new > old }

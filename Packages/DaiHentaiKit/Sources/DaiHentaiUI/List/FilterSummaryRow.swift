@@ -10,17 +10,17 @@ struct FilterSummaryRow: View {
     var body: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 8) {
-                Label(site == .exHentai ? "ExHentai" : "E-Hentai", systemImage: site == .exHentai ? "lock.shield" : "globe")
+                Label(String(site == .exHentai ? "ExHentai" : "E-Hentai"), systemImage: site == .exHentai ? "lock.shield" : "globe")
                     .font(.footnote.weight(.semibold))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
                     .foregroundStyle(site == .exHentai ? Color.moeAccent : .secondary)
                     .background(Color(uiColor: .tertiarySystemFill), in: .capsule)
-                    .accessibilityLabel(site == .exHentai ? "目前使用 ExHentai" : "目前使用 E-Hentai")
+                    .accessibilityLabel(site == .exHentai ? LocalizedStringResource.filterSiteEx : .filterSiteEh)
 
                 if filter.isDefault {
                     Button(action: openSearch) {
-                        Label("全部作品 · 點我設定搜尋條件", systemImage: "line.3.horizontal.decrease")
+                        Label(.filterDefault, systemImage: "line.3.horizontal.decrease")
                             .font(.footnote.weight(.medium))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
@@ -34,10 +34,10 @@ struct FilterSummaryRow: View {
                         chip(filter.keyword, symbol: "magnifyingglass") { filter.keyword = "" }
                     }
                     if filter.language != .any {
-                        chip(filter.language.title, symbol: "character.bubble") { filter.language = .any }
+                        chip(String(localized: filter.language.title), symbol: "character.bubble") { filter.language = .any }
                     }
                     if filter.minimumRating != .any {
-                        chip(filter.minimumRating.title, symbol: "star") { filter.minimumRating = .any }
+                        chip(String(localized: filter.minimumRating.title), symbol: "star") { filter.minimumRating = .any }
                     }
                     if filter.categories.count != GalleryCategory.allCases.count {
                         chip(categoriesTitle, symbol: "square.grid.2x2") { filter.categories = Set(GalleryCategory.allCases) }
@@ -53,8 +53,8 @@ struct FilterSummaryRow: View {
 
     private var categoriesTitle: String {
         let chosen = GalleryCategory.allCases.filter(filter.categories.contains)
-        if chosen.count <= 2 { return chosen.map(\.rawValue).joined(separator: "、") }
-        return "\(chosen.count) 種類別"
+        if chosen.count <= 2 { return chosen.map(\.rawValue).joined(separator: String(localized: .commonListSeparator)) }
+        return String(localized: .filterCategoryCount(chosen.count))
     }
 
     private func chip(_ title: String, symbol: String, clear: @escaping () -> Void) -> some View {
@@ -69,7 +69,7 @@ struct FilterSummaryRow: View {
                     .symbolRenderingMode(.hierarchical)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("清除 \(title)")
+            .accessibilityLabel(.filterClear(title))
         }
         .font(.footnote.weight(.medium))
         .foregroundStyle(Color.moeAccent)

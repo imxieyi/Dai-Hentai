@@ -91,25 +91,25 @@ private struct ReaderContent: View {
             guard old > 0, old != new else { return }
             reader.keepCurrentPage()
         }
-        .alert("O3O", isPresented: $isShowingNotFound) {
-            Button("好 O3O") { app.router.popReader(of: gallery) }
+        .alert(Text(verbatim: "O3O"), isPresented: $isShowingNotFound) {
+            Button(.commonOkayPlain) { app.router.popReader(of: gallery) }
         } message: {
-            Text("這部作品好像不見囉")
+            Text(.readerNotFound)
         }
-        .alert("O3O", isPresented: $isConfirmingDelete) {
-            Button("好 O3Ob", role: .destructive) { reader.delete() }
-            Button("先不要好了 OwO\"", role: .cancel) {}
+        .alert(Text(verbatim: "O3O"), isPresented: $isConfirmingDelete) {
+            Button(.commonOkayHappy, role: .destructive) { reader.delete() }
+            Button(.commonNotNow, role: .cancel) {}
         } message: {
-            Text("我們現在要刪除這部作品囉!")
+            Text(.commonConfirmDeleteGallery)
         }
-        .alert("跳到第幾頁", isPresented: $isAskingPage) {
-            TextField("1 – \(reader.pageCount)", text: $pageInput)
+        .alert(Text(.readerGoToPageTitle), isPresented: $isAskingPage) {
+            TextField(String("1 – \(reader.pageCount)"), text: $pageInput)
                 .keyboardType(.numberPad)
-            Button("好") {
+            Button(.commonOkay) {
                 if let page = Int(pageInput) { reader.jump(to: page - 1) }
                 pageInput = ""
             }
-            Button("取消", role: .cancel) { pageInput = "" }
+            Button(.commonCancel, role: .cancel) { pageInput = "" }
         }
         .quickLookPreview($quickLookURL)
         .focusable()
@@ -178,14 +178,14 @@ private struct ReaderContent: View {
     @ViewBuilder
     private var pages: some View {
         if phase == .failed {
-            KaomojiState(kaomoji: "O口O", title: "網路錯誤", message: "這部作品還沒有下載好的頁面, 連上網路再試一次吧") {
-                Button("再試一次") { reader.retry() }
+            KaomojiState(kaomoji: "O口O", title: .commonNetworkError, message: .readerNoPagesMessage) {
+                Button(.commonTryAgain) { reader.retry() }
                     .buttonStyle(.borderedProminent)
             }
         } else if reader.pageCount == 0 || (phase == .loading && reader.downloader?.readyCount == 0) {
             VStack(spacing: 12) {
                 ProgressView()
-                Text("讀取中")
+                Text(.readerLoading)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -303,30 +303,30 @@ private struct ReaderContent: View {
                 .frame(width: size.width, height: size.height)
                 .contentShape(.rect)
                 .contextMenu { pageMenu(page, url: url) }
-                .accessibilityLabel("第 \(page + 1) 頁")
+                .accessibilityLabel(.commonPageNumber(page + 1))
                 .accessibilityAddTraits(.isImage)
         }
     }
 
     @ViewBuilder
     private func pageMenu(_ page: Int, url: URL) -> some View {
-        ShareLink(item: SharedPage(fileURL: url, title: gallery.bestTitle, page: page + 1), preview: SharePreview("第 \(page + 1) 頁", image: Image(systemName: "photo"))) {
-            Label("分享這頁", systemImage: "square.and.arrow.up")
+        ShareLink(item: SharedPage(fileURL: url, title: gallery.bestTitle, page: page + 1), preview: SharePreview(String(localized: .commonPageNumber(page + 1)), image: Image(systemName: "photo"))) {
+            Label(.readerSharePage, systemImage: "square.and.arrow.up")
         }
-        Button("儲存到照片", systemImage: "square.and.arrow.down") {
+        Button(.readerSaveToPhotos, systemImage: "square.and.arrow.down") {
             Task {
                 guard let copy = await PageExport.exportedCopy(of: url, title: gallery.bestTitle, page: page + 1) else { return }
                 switch await PageExport.saveToPhotos(copy) {
-                case .saved: app.toasts.show("存到照片囉", kaomoji: "O3Ob", symbol: "checkmark.circle.fill")
-                case .denied: app.toasts.show("沒有照片的權限, 可以到設定打開", kaomoji: "O口O")
-                case .failed: app.toasts.show("存不進去", kaomoji: "O口O")
+                case .saved: app.toasts.show(.readerSaved, kaomoji: "O3Ob", symbol: "checkmark.circle.fill")
+                case .denied: app.toasts.show(.readerPhotosDenied, kaomoji: "O口O")
+                case .failed: app.toasts.show(.readerSaveFailed, kaomoji: "O口O")
                 }
             }
         }
-        Button("放大看", systemImage: "arrow.up.left.and.arrow.down.right") {
+        Button(.readerViewFullSize, systemImage: "arrow.up.left.and.arrow.down.right") {
             Task { quickLookURL = await PageExport.exportedCopy(of: url, title: gallery.bestTitle, page: page + 1) }
         }
-        Button("重新載入這頁", systemImage: "arrow.clockwise") {
+        Button(.readerReloadPage, systemImage: "arrow.clockwise") {
             reader.reload(page: page)
         }
     }
@@ -364,26 +364,26 @@ private struct ReaderContent: View {
         ToolbarItemGroup(placement: .topBarTrailing) {
             downloadButton
             ShareLink(item: gallery.galleryURL(on: app.site), subject: Text(gallery.bestTitle), message: Text(gallery.bestTitle)) {
-                Label("分享", systemImage: "square.and.arrow.up")
+                Label(.commonShare, systemImage: "square.and.arrow.up")
             }
         }
         ToolbarItem(placement: .topBarPinnedTrailing) {
             Menu {
-                Picker("閱讀方向", selection: Binding(get: { reader.direction }, set: { reader.setDirection($0) })) {
+                Picker(.readerDirection, selection: Binding(get: { reader.direction }, set: { reader.setDirection($0) })) {
                     ForEach(ReadingDirection.allCases) { direction in
                         Label(direction.title, systemImage: direction == .vertical ? "arrow.up.and.down" : "arrow.left.and.right")
                             .tag(direction)
                     }
                 }
                 .pickerStyle(.inline)
-                Button("跳到第幾頁…", systemImage: "number") { isAskingPage = true }
-                Button("回到第 1 頁", systemImage: "arrow.up.to.line") { reader.jump(to: 0) }
+                Button(.readerGoToPage, systemImage: "number") { isAskingPage = true }
+                Button(.readerBackToFirst, systemImage: "arrow.up.to.line") { reader.jump(to: 0) }
                 Divider()
-                Button("作品資訊", systemImage: "info.circle") {
+                Button(.readerInfo, systemImage: "info.circle") {
                     app.router.galleryCard = GalleryCardRoute(gallery: gallery, showsReadActions: false)
                 }
             } label: {
-                Label("更多", systemImage: "ellipsis")
+                Label(.readerMore, systemImage: "ellipsis")
             }
             .accessibilityIdentifier("readerMoreMenu")
         }
@@ -398,13 +398,13 @@ private struct ReaderContent: View {
                 ProgressRing(progress: downloader.progress)
                     .frame(width: 22, height: 22)
             }
-            .accessibilityLabel("下載中 \(downloader.progress.formatted(.percent.precision(.fractionLength(0))))")
-            .accessibilityHint("點兩下可以刪除這部作品")
+            .accessibilityLabel(.readerDownloadingAccessibility(downloader.progress.formatted(.percent.precision(.fractionLength(0)))))
+            .accessibilityHint(Text(.readerDownloadingHint))
         } else if reader.isDownloaded {
-            Button("刪除", systemImage: "trash") { isConfirmingDelete = true }
+            Button(.commonDelete, systemImage: "trash") { isConfirmingDelete = true }
                 .accessibilityIdentifier("deleteButton")
         } else {
-            Button("我要下載", systemImage: "arrow.down.circle") { reader.download() }
+            Button(.commonWantDownload, systemImage: "arrow.down.circle") { reader.download() }
                 .accessibilityIdentifier("readerDownloadButton")
         }
     }
@@ -435,11 +435,11 @@ private struct LoadingPageRow: View {
             if state == .failed {
                 Kaomoji(text: "O口O", style: .title2.weight(.bold))
                     .foregroundStyle(.secondary)
-                Button("第 \(page + 1) 頁載入失敗, 點我重試", action: retry)
+                Button(.readerPageFailed(page + 1), action: retry)
                     .buttonStyle(.bordered)
             } else {
                 ProgressView()
-                Text("第 \(page + 1) 頁載入中...")
+                Text(.readerPageLoading(page + 1))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -458,7 +458,7 @@ private struct EarlierPagesRow: View {
         Button(action: load) {
             HStack(spacing: 8) {
                 if isLoading { ProgressView() } else { Image(systemName: "arrow.up") }
-                Text(isLoading ? "前面的頁面載入中..." : "載入第 1 – \(first) 頁")
+                Text(isLoading ? LocalizedStringResource.readerEarlierLoading : .readerLoadEarlier(first))
             }
             .font(.subheadline)
             .foregroundStyle(.secondary)
@@ -471,7 +471,7 @@ private struct EarlierPagesRow: View {
 private struct EndRow: View {
     var body: some View {
         HStack(spacing: 6) {
-            Text("看完囉")
+            Text(.readerEnd)
             Kaomoji(text: "O3Ob")
         }
         .font(.subheadline)

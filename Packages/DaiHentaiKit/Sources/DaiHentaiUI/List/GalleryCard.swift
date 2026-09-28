@@ -72,7 +72,7 @@ struct GalleryCard: View {
     }
 
     private var sizeLine: String {
-        [gallery.fileCount > 0 ? "\(gallery.fileCount) 頁" : nil, gallery.fileSize.isEmpty ? nil : gallery.fileSize]
+        [gallery.fileCount > 0 ? String(localized: .commonPageCount(gallery.fileCount)) : nil, gallery.fileSize.isEmpty ? nil : gallery.fileSize]
             .compactMap { $0 }
             .joined(separator: " · ")
     }
@@ -84,7 +84,7 @@ struct GalleryCard: View {
             EmptyView()
         case .downloading(let progress):
             Label {
-                Text("DL: \(Int(progress * 100)) %")
+                Text(verbatim: "DL: \(progress.formatted(.percent.precision(.fractionLength(0))))")
                     .monospacedDigit()
                     .contentTransition(.numericText())
             } icon: {
@@ -93,11 +93,11 @@ struct GalleryCard: View {
             .font(.caption.weight(.semibold))
             .foregroundStyle(Color.moeAccent)
         case .downloaded:
-            Label("已下載", systemImage: "checkmark.circle.fill")
+            Label(.commonDownloaded, systemImage: "checkmark.circle.fill")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.green)
         case let .read(page, total):
-            Label(total > 0 ? "看到 \(page)/\(total)" : "看到第 \(page) 頁", systemImage: "book.pages")
+            Label(total > 0 ? LocalizedStringResource.commonReadProgress(page, total) : .commonReadToPage(page), systemImage: "book.pages")
                 .font(.caption.weight(.medium))
                 .foregroundStyle(.secondary)
                 .monospacedDigit()

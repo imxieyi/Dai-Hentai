@@ -13,7 +13,7 @@ struct SiteWebView: View {
     var body: some View {
         Group {
             if model.isDemo {
-                KaomojiState(kaomoji: "O3O", title: "展示模式不會開網頁", message: url.absoluteString)
+                KaomojiState(kaomoji: "O3O", title: .webDemoNoWeb, message: .webDemoWouldOpen(url.absoluteString))
             } else {
                 WebView(page)
                     .ignoresSafeArea(edges: .bottom)
@@ -27,7 +27,7 @@ struct SiteWebView: View {
                 ToolbarItem(placement: .topBarTrailing) { ProgressView() }
             } else if !model.isDemo {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("重新整理", systemImage: "arrow.clockwise") { page.reload() }
+                    Button(.commonReload, systemImage: "arrow.clockwise") { page.reload() }
                 }
             }
         }
@@ -52,8 +52,8 @@ struct ExWebLoginView: View {
         NavigationStack {
             Group {
                 if model.isDemo {
-                    KaomojiState(kaomoji: "O3O", title: "展示模式", message: "這裡平常會打開 E-Hentai 論壇的登入頁") {
-                        Button("假裝登入成功") {
+                    KaomojiState(kaomoji: "O3O", title: .webDemoTitle, message: .webDemoLoginMessage) {
+                        Button(.webDemoPretendLogIn) {
                             model.demoWebLogin()
                             dismiss()
                         }
@@ -71,21 +71,21 @@ struct ExWebLoginView: View {
                         }
                 }
             }
-            .navigationTitle("登入 Ex")
+            .navigationTitle(.webLogInTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消", systemImage: "xmark") { dismiss() }
+                    Button(.commonCancel, systemImage: "xmark") { dismiss() }
                 }
                 if !model.isDemo {
                     ToolbarItem(placement: .primaryAction) {
-                        Button("重新整理", systemImage: "arrow.clockwise") { page.reload() }
+                        Button(.commonReload, systemImage: "arrow.clockwise") { page.reload() }
                     }
                 }
             }
             .safeAreaBar(edge: .bottom) {
                 if !model.isDemo {
-                    Text(isFinishing ? "登入成功, 設定中..." : "用 E-Hentai 論壇帳號登入, 成功後會自動關掉這頁")
+                    Text(isFinishing ? LocalizedStringResource.webFinishing : .webLogInHint)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity)

@@ -30,6 +30,7 @@ let package = Package(
         .target(
             name: "DaiHentaiUI",
             dependencies: ["DaiHentaiCore"],
+            resources: [.process("Resources")],
             swiftSettings: approachableConcurrency + [.defaultIsolation(MainActor.self)]
         ),
         .testTarget(

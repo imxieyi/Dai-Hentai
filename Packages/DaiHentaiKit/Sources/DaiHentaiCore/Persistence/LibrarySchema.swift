@@ -128,10 +128,10 @@ public enum ReadingDirection: String, CaseIterable, Codable, Sendable, Identifia
 
     public var id: String { rawValue }
 
-    public var title: String {
+    public var title: LocalizedStringResource {
         switch self {
-        case .vertical: "上下捲動"
-        case .horizontal: "左右捲動"
+        case .vertical: .directionVertical
+        case .horizontal: .directionHorizontal
         }
     }
 

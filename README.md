@@ -23,6 +23,16 @@ alt="newHentai" width="240" height="180" border="10" /></a>
 ## Tag 中文轉換
 感謝隔壁的朋友有整理好的 tag 可以查找了, 所以這邊的轉換參考內容都是從 [https://github.com/Mapaler/EhTagTranslator](https://github.com/Mapaler/EhTagTranslator) 來的, 深表感謝
 
+字典本身是簡體中文: 簡體中文介面直接顯示, 繁體中文介面會自動轉成繁體, 英文跟日文介面就不顯示
+
+## 語言
+介面支援繁體中文 (開發語言)、簡體中文、英文、日文, 跟著系統或是「設定 > 萌萌噠 > 語言」切換
+
+- 字串都放在 String Catalog 裡: `DaiHentaiUI` 跟 `DaiHentaiCore` 各有一份 `Resources/Localizable.xcstrings`, App 本體的 `InfoPlist.xcstrings` 放主畫面名稱跟權限說明
+- key 是手動管理的 (例如 `Reader.GoToPage`), Xcode 會產生對應的 `LocalizedStringResource` symbol, 程式裡寫 `Text(.readerGoToPage)`、`Button(.commonWantDownload) { ... }`、`.commonPageCount(n)`; 在 package 裡也會自動用對 bundle
+- 英文的數量字串有單複數變化 (`%lld page` / `%lld pages`)
+- 顏文字 (O3O、OwO、O口O...) 在每個語言都保留
+
 ## 原生 Xcode 直接安裝方法
 1. 獲取專案（兩種方法）
 
@@ -63,7 +73,7 @@ xcodebuild -scheme DaiHentaiKit-Package -destination 'platform=iOS Simulator,nam
 # 連到真的網站的測試 (選用)
 TEST_RUNNER_DAIHENTAI_LIVE_TESTS=1 xcodebuild -scheme DaiHentaiKit-Package -destination 'platform=iOS Simulator,name=iPhone 18 Pro' test
 
-# UI 測試 (展示模式, 每個畫面的截圖會存在 .xcresult 裡)
+# UI 測試 (展示模式, 每個畫面的截圖會存在 .xcresult 裡; testTourEnglish / testTourSimplifiedChinese / testTourJapanese 會用其他語言走一遍)
 cd ../..
 xcodebuild -project Dai-Hentai.xcodeproj -scheme Dai-Hentai -destination 'platform=iOS Simulator,name=iPhone 18 Pro' test
 ```

@@ -13,7 +13,8 @@ final class ToastCenter {
     private(set) var current: Toast?
     private var dismissTask: Task<Void, Never>?
 
-    func show(_ message: String, kaomoji: String? = "O3O", symbol: String? = nil, duration: Duration = .seconds(1.6)) {
+    func show(_ message: LocalizedStringResource, kaomoji: String? = "O3O", symbol: String? = nil, duration: Duration = .seconds(1.6)) {
+        let message = String(localized: message)
         let toast = Toast(kaomoji: kaomoji, message: message, symbol: symbol)
         withAnimation(.snappy) { current = toast }
         AccessibilityNotification.Announcement(message.spoken).post()

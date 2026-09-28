@@ -151,6 +151,9 @@ func fixtureText(_ name: String) throws -> String {
         #expect(translator.translate("female:glasses") == "眼鏡")
         #expect(translator.annotated("glasses") == "glasses (眼鏡)")
         #expect(translator.annotated("unknown") == "unknown")
-        #expect(TagTranslator.shared.translate("1 equals 2") == "1=2")
+        #expect(TagTranslator(display: .simplified).translate("1 equals 2") == "1=2")
+        // The dictionary is Simplified Chinese: converted for Traditional, hidden elsewhere.
+        #expect(TagTranslator(dictionary: ["glasses": "眼镜"], display: .traditional).translate("glasses") == "眼鏡")
+        #expect(TagTranslator(dictionary: ["glasses": "眼镜"], display: .hidden).translate("glasses") == nil)
     }
 }

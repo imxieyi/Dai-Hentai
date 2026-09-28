@@ -28,39 +28,39 @@ struct SettingsView: View {
         Form {
             statusSection
             usageSection
-            Section("觀看習慣") {
-                Picker("滑動方向切換", selection: $library.preferences.readingDirection) {
+            Section(.settingsReadingSection) {
+                Picker(.readerScrollDirection, selection: $library.preferences.readingDirection) {
                     ForEach(ReadingDirection.allCases) { direction in
                         Text(direction.title).tag(direction)
                     }
                 }
-                Toggle("點列表作品時先跳出作品卡", isOn: $library.preferences.asksBeforeOpening)
+                Toggle(.settingsAsksBeforeOpening, isOn: $library.preferences.asksBeforeOpening)
             }
             privacySection
             aboutSection
         }
-        .navigationTitle("設定")
+        .navigationTitle(.tabSettings)
         .refreshable { await runDiagnostics() }
         .task { await runDiagnostics() }
         .task(id: galleries.count) { await measureUsage() }
         .sheet(isPresented: $isExKeyPresented) {
             ExKeyLoginView()
         }
-        .alert("O3O", isPresented: $isConfirmingClear) {
-            Button("好 O3Ob", role: .destructive) { clearHistory() }
-            Button("先不要好了 OwO\"", role: .cancel) {}
+        .alert(Text(verbatim: "O3O"), isPresented: $isConfirmingClear) {
+            Button(.commonOkayHappy, role: .destructive) { clearHistory() }
+            Button(.commonNotNow, role: .cancel) {}
         } message: {
-            Text("我們現在要刪除所有觀看紀錄囉!")
+            Text(.commonConfirmClearHistory)
         }
-        .alert("確定要上鎖嗎?", isPresented: $isConfirmingLock) {
-            Button("OK, 鎖8") { Task { await enableLock() } }
-            Button("O口O 真假, 我考慮一下", role: .cancel) {}
+        .alert(Text(.settingsLockConfirmTitle), isPresented: $isConfirmingLock) {
+            Button(.settingsLockConfirmOK) { Task { await enableLock() } }
+            Button(.settingsLockConfirmCancel, role: .cancel) {}
         } message: {
-            Text("未來只可以透過指紋或是臉來解鎖, 密碼無法!")
+            Text(.settingsLockConfirmMessage)
         }
         .overlay {
             if let clearProgress {
-                GlassHUD(title: "作品刪除中 ( \(clearProgress.done) / \(clearProgress.total) )", progress: clearProgress.total == 0 ? 1 : Double(clearProgress.done) / Double(clearProgress.total))
+                GlassHUD(title: .commonDeletingProgress(clearProgress.done, clearProgress.total), progress: clearProgress.total == 0 ? 1 : Double(clearProgress.done) / Double(clearProgress.total))
             }
         }
         .onChange(of: model.isLoggedIn) {
@@ -73,48 +73,48 @@ struct SettingsView: View {
     private var statusSection: some View {
         Section {
             NavigationLink(value: Route.web(title: "E-Hentai", url: Site.eHentai.baseURL)) {
-                statusRow("Eh 列表測試 (點擊開啟網頁)", status: eh.list)
+                statusRow(.settingsEhListTest, status: eh.list)
             }
-            statusRow("Eh API 使用測試", status: eh.api, parseFailureText: "不知道")
+            statusRow(.settingsEhAPITest, status: eh.api, parseFailureText: .settingsUnknown)
 
             if model.isLoggedIn {
                 NavigationLink(value: Route.web(title: "ExHentai", url: Site.exHentai.baseURL)) {
-                    statusRow("Ex 列表測試 (點擊開啟網頁)", status: ex.list)
+                    statusRow(.settingsExListTest, status: ex.list)
                 }
             } else {
-                statusRow("Ex 列表測試 (點擊開啟網頁)", status: .notLoggedIn)
+                statusRow(.settingsExListTest, status: .notLoggedIn)
             }
-            statusRow("Ex API 使用測試", status: model.isLoggedIn ? ex.api : .notLoggedIn, parseFailureText: "不知道")
+            statusRow(.settingsExAPITest, status: model.isLoggedIn ? ex.api : .notLoggedIn, parseFailureText: .settingsUnknown)
 
             if !model.isLoggedIn {
                 Button {
                     model.router.isExWebLoginPresented = true
                 } label: {
-                    Label("用網頁登入 Ex", systemImage: "person.crop.circle.badge.checkmark")
+                    Label(.settingsWebLogIn, systemImage: "person.crop.circle.badge.checkmark")
                 }
                 .accessibilityIdentifier("settingsWebLogin")
             }
             Button {
                 isExKeyPresented = true
             } label: {
-                Label("ExKey 登錄", systemImage: "key")
+                Label(.settingsExKeyLogIn, systemImage: "key")
             }
             .accessibilityIdentifier("settingsExKey")
             if model.isLoggedIn {
                 Button(role: .destructive) {
                     Task { await model.logOut() }
                 } label: {
-                    Label("Ex 登入整個失敗 還是只有熊貓 點我登出", systemImage: "rectangle.portrait.and.arrow.right")
+                    Label(.settingsLogOut, systemImage: "rectangle.portrait.and.arrow.right")
                 }
             }
         } header: {
-            Text("App 狀態")
+            Text(.settingsStatusSection)
         } footer: {
-            Text(model.isLoggedIn ? "已經登入 Ex, 列表和下載會使用 ExHentai。" : "沒有登入時, 列表和下載會使用 E-Hentai。")
+            Text(model.isLoggedIn ? LocalizedStringResource.settingsStatusFooterEx : .settingsStatusFooterEh)
         }
     }
 
-    private func statusRow(_ title: String, status: ProbeStatus, parseFailureText: String? = nil) -> some View {
+    private func statusRow(_ title: LocalizedStringResource, status: ProbeStatus, parseFailureText: LocalizedStringResource? = nil) -> some View {
         LabeledContent {
             StatusBadge(status: status, parseFailureText: parseFailureText)
         } label: {
@@ -125,17 +125,17 @@ struct SettingsView: View {
     // MARK: - 用量
 
     private var usageSection: some View {
-        Section("用量") {
+        Section(.settingsUsageSection) {
             if let usage {
                 StorageBar(usage: usage)
                     .padding(.vertical, 4)
-                LabeledContent("歷史", value: "\(usage.historyBytes.formatted(.byteCount(style: .file))) (\(usage.historyCount))")
-                LabeledContent("下載", value: "\(usage.downloadBytes.formatted(.byteCount(style: .file))) (\(usage.downloadCount))")
+                LabeledContent(.tabHistory, value: "\(usage.historyBytes.formatted(.byteCount(style: .file))) (\(usage.historyCount))")
+                LabeledContent(.tabDownloads, value: "\(usage.downloadBytes.formatted(.byteCount(style: .file))) (\(usage.downloadCount))")
             } else {
-                LabeledContent("歷史", value: "計算中...")
-                LabeledContent("下載", value: "計算中...")
+                LabeledContent(.tabHistory, value: String(localized: .commonCalculating))
+                LabeledContent(.tabDownloads, value: String(localized: .commonCalculating))
             }
-            Button("清除所有觀看紀錄", role: .destructive) {
+            Button(.commonClearHistory, role: .destructive) {
                 isConfirmingClear = true
             }
             .disabled((usage?.historyCount ?? 0) == 0)
@@ -155,17 +155,17 @@ struct SettingsView: View {
                     Task { await disableLock() }
                 }
             })) {
-                Label("App 上鎖", systemImage: model.lock.biometricKind.symbolName)
+                Label(.settingsLock, systemImage: model.lock.biometricKind.symbolName)
             }
             .disabled(isLockBusy)
             .accessibilityIdentifier("lockToggle")
             Toggle(isOn: $library.preferences.hidesInAppSwitcher) {
-                Label("切換 App 時遮住畫面", systemImage: "eye.slash")
+                Label(.settingsHideInSwitcher, systemImage: "eye.slash")
             }
         } header: {
-            Text("隱私設定")
+            Text(.settingsPrivacySection)
         } footer: {
-            Text(model.library.preferences.isAppLocked ? "目前是上鎖狀態" : "目前是沒有上鎖狀態")
+            Text(model.library.preferences.isAppLocked ? LocalizedStringResource.settingsLockedFooter : .settingsUnlockedFooter)
         }
     }
 
@@ -174,11 +174,11 @@ struct SettingsView: View {
         defer { isLockBusy = false }
         switch await model.lock.enableLock() {
         case .success:
-            model.toasts.show("上鎖囉", kaomoji: "O3Ob", symbol: "lock.fill")
+            model.toasts.show(.settingsLocked, kaomoji: "O3Ob", symbol: "lock.fill")
         case .unavailable:
-            model.toasts.show("這台裝置沒有設定 Face ID 或 Touch ID, 鎖不住", kaomoji: "o.o")
+            model.toasts.show(.settingsNoBiometrics, kaomoji: "o.o")
         case .lockedOut:
-            model.toasts.show("失敗太多次囉, 請先用密碼解鎖手機", kaomoji: "O口O")
+            model.toasts.show(.settingsLockout, kaomoji: "O口O")
         case .failed:
             break
         }
@@ -188,20 +188,20 @@ struct SettingsView: View {
         isLockBusy = true
         defer { isLockBusy = false }
         if await model.lock.disableLock() {
-            model.toasts.show("解除上鎖囉", kaomoji: "O3O", symbol: "lock.open.fill")
+            model.toasts.show(.settingsUnlocked, kaomoji: "O3O", symbol: "lock.open.fill")
         }
     }
 
     // MARK: - 關於
 
     private var aboutSection: some View {
-        Section("關於") {
-            LabeledContent("版本", value: Self.version)
+        Section(.settingsAboutSection) {
+            LabeledContent(.settingsVersion, value: Self.version)
             Link(destination: URL(string: "https://github.com/DaidoujiChen/Dai-Hentai")!) {
-                Label("GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
+                Label(String("GitHub"), systemImage: "chevron.left.forwardslash.chevron.right")
             }
             if model.isDemo {
-                Label("展示模式: 所有作品都是產生出來的", systemImage: "theatermasks")
+                Label(.settingsDemoMode, systemImage: "theatermasks")
                     .foregroundStyle(.secondary)
             }
         }
@@ -244,7 +244,7 @@ struct SettingsView: View {
             }
             try? await Task.sleep(for: .milliseconds(300))
             withAnimation { clearProgress = nil }
-            model.toasts.show("觀看紀錄都清掉囉", kaomoji: "O3Ob")
+            model.toasts.show(.commonHistoryCleared, kaomoji: "O3Ob")
             await measureUsage()
         }
     }
@@ -269,18 +269,18 @@ private struct StorageBar: View {
             }
             .frame(height: 10)
             HStack(spacing: 14) {
-                legend("歷史", color: Color.moeAccent.opacity(0.45))
-                legend("下載", color: Color.moeAccent)
+                legend(.tabHistory, color: Color.moeAccent.opacity(0.45))
+                legend(.tabDownloads, color: Color.moeAccent)
                 Spacer()
                 Text((usage.historyBytes + usage.downloadBytes).formatted(.byteCount(style: .file)))
                     .font(.footnote.weight(.semibold))
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("總共 \((usage.historyBytes + usage.downloadBytes).formatted(.byteCount(style: .file)))")
+        .accessibilityLabel(.settingsTotalAccessibility((usage.historyBytes + usage.downloadBytes).formatted(.byteCount(style: .file))))
     }
 
-    private func legend(_ title: String, color: Color) -> some View {
+    private func legend(_ title: LocalizedStringResource, color: Color) -> some View {
         HStack(spacing: 4) {
             Circle().fill(color).frame(width: 8, height: 8)
             Text(title).font(.footnote).foregroundStyle(.secondary)

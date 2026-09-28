@@ -22,7 +22,7 @@ public enum BiometricAuthenticator {
             case .faceID: "Face ID"
             case .touchID: "Touch ID"
             case .opticID: "Optic ID"
-            case .none: "Face ID 或 Touch ID"
+            case .none: String(localized: .biometricAny)
             }
         }
     }

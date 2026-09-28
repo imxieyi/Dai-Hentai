@@ -19,8 +19,8 @@ struct SearchSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("手動輸入關鍵字") {
-                    TextField("輸入要搜尋的字串", text: $draft.keyword)
+                Section(.searchKeywordSection) {
+                    TextField(.searchKeywordPlaceholder, text: $draft.keyword)
                         .submitLabel(.search)
                         .onSubmit(apply)
                         .autocorrectionDisabled()
@@ -29,8 +29,8 @@ struct SearchSheet: View {
                         .accessibilityIdentifier("keywordField")
                 }
 
-                Section("只搜尋固定語言") {
-                    Picker("只搜尋固定語言", selection: $draft.language) {
+                Section(.searchLanguageSection) {
+                    Picker(.searchLanguageSection, selection: $draft.language) {
                         ForEach(LanguageFilter.allCases) { language in
                             Text(language.title).tag(language)
                         }
@@ -39,11 +39,11 @@ struct SearchSheet: View {
                     .labelsHidden()
                 }
 
-                hintSection("從近期標題選取", hints: titleHints)
-                hintSection("從近期 Tag 選取", hints: tagHints)
+                hintSection(.searchTitleHints, hints: titleHints)
+                hintSection(.searchTagHints, hints: tagHints, explainsReplacement: true)
 
-                Section("評分要求") {
-                    Picker("評分要求", selection: $draft.minimumRating) {
+                Section(.searchRatingSection) {
+                    Picker(.searchRatingSection, selection: $draft.minimumRating) {
                         ForEach(MinimumRating.allCases) { rating in
                             Text(rating.title).tag(rating)
                         }
@@ -67,22 +67,22 @@ struct SearchSheet: View {
                     .padding(.vertical, 4)
                 } header: {
                     HStack {
-                        Text("作品類別")
+                        Text(.searchCategories)
                         Spacer()
-                        Button("全選") { draft.categories = Set(GalleryCategory.allCases) }
-                        Text("·").foregroundStyle(.tertiary)
-                        Button("反選") { draft.categories = Set(GalleryCategory.allCases).subtracting(draft.categories) }
+                        Button(.searchSelectAll) { draft.categories = Set(GalleryCategory.allCases) }
+                        Text(verbatim: "·").foregroundStyle(.tertiary)
+                        Button(.searchInvert) { draft.categories = Set(GalleryCategory.allCases).subtracting(draft.categories) }
                     }
                     .textCase(nil)
                 } footer: {
                     if draft.categories.isEmpty {
-                        Text("至少要選一種類別呦 O3O")
+                        Text(.searchNeedCategory)
                             .foregroundStyle(Color.moeAccent)
                     }
                 }
 
                 Section {
-                    Button("全部重設", role: .destructive) {
+                    Button(.searchResetAll, role: .destructive) {
                         withAnimation {
                             draft = .default
                             selectedHints = []
@@ -91,14 +91,14 @@ struct SearchSheet: View {
                     .disabled(draft.isDefault && selectedHints.isEmpty)
                 }
             }
-            .navigationTitle("搜尋")
+            .navigationTitle(.commonSearch)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消", systemImage: "xmark") { dismiss() }
+                    Button(.commonCancel, systemImage: "xmark") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("好", action: apply)
+                    Button(.commonOkay, action: apply)
                         .disabled(draft.categories.isEmpty)
                         .accessibilityIdentifier("searchConfirmButton")
                 }
@@ -112,7 +112,7 @@ struct SearchSheet: View {
 
     private var preview: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("將搜尋：")
+            Text(.commonWillSearch)
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Text(previewText)
@@ -129,20 +129,20 @@ struct SearchSheet: View {
 
     private var previewText: String {
         var parts: [String] = []
-        parts.append(effectiveKeyword.isEmpty ? "所有作品" : effectiveKeyword)
-        if draft.language != .any { parts.append(draft.language.title) }
-        if draft.minimumRating != .any { parts.append(draft.minimumRating.title) }
+        parts.append(effectiveKeyword.isEmpty ? String(localized: .searchAllGalleries) : effectiveKeyword)
+        if draft.language != .any { parts.append(String(localized: draft.language.title)) }
+        if draft.minimumRating != .any { parts.append(String(localized: draft.minimumRating.title)) }
         if draft.categories.count != GalleryCategory.allCases.count {
-            parts.append(draft.categories.isEmpty ? "沒有類別" : "\(draft.categories.count) 種類別")
+            parts.append(String(localized: draft.categories.isEmpty ? .searchNoCategory : .filterCategoryCount(draft.categories.count)))
         }
         return parts.joined(separator: " · ")
     }
 
     @ViewBuilder
-    private func hintSection(_ title: String, hints: [String]) -> some View {
+    private func hintSection(_ title: LocalizedStringResource, hints: [String], explainsReplacement: Bool = false) -> some View {
         Section {
             if hints.isEmpty {
-                Text("看過的作品多一點, 這裡就會出現提示字呦")
+                Text(.searchHintsEmpty)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             } else {
@@ -162,8 +162,8 @@ struct SearchSheet: View {
         } header: {
             Text(title)
         } footer: {
-            if hints.isEmpty == false, !selectedHints.isEmpty, title == "從近期 Tag 選取" {
-                Text("有選提示字的時候, 會用提示字取代上面輸入的關鍵字")
+            if explainsReplacement, !hints.isEmpty, !selectedHints.isEmpty {
+                Text(.searchHintsReplace)
             }
         }
     }
@@ -205,9 +205,11 @@ struct CategoryTile: View {
                 VStack(alignment: .leading, spacing: 0) {
                     Text(category.rawValue)
                         .font(.subheadline.weight(.semibold))
-                    Text(category.chineseName)
-                        .font(.caption2)
-                        .opacity(0.8)
+                    if let name = category.localizedName {
+                        Text(name)
+                            .font(.caption2)
+                            .opacity(0.8)
+                    }
                 }
                 Spacer(minLength: 0)
             }
@@ -225,7 +227,7 @@ struct CategoryTile: View {
             .contentShape(.rect(cornerRadius: 12))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(category.rawValue) \(category.chineseName)")
+        .accessibilityLabel(category.spokenName)
         .accessibilityAddTraits(isOn ? .isSelected : [])
         .sensoryFeedback(.selection, trigger: isOn)
     }

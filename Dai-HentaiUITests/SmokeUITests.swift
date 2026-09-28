@@ -9,7 +9,8 @@ final class SmokeUITests: XCTestCase {
     override func setUp() async throws {
         continueAfterFailure = true
         app = XCUIApplication()
-        app.launchArguments = ["-DemoMode"]
+        // The walkthroughs below find controls by their Traditional Chinese titles, so pin the language.
+        app.launchArguments = ["-DemoMode", "-AppleLanguages", "(zh-Hant)", "-AppleLocale", "zh_TW"]
     }
 
     private func snap(_ name: String) {
@@ -135,7 +136,7 @@ final class SmokeUITests: XCTestCase {
         pause()
         snap("22-search-no-category")
         app.buttons["全選"].firstMatch.tap()
-        app.buttons["Cosplay Cosplay"].firstMatch.tap()
+        app.buttons["Cosplay"].firstMatch.tap()
         pause()
         element("searchConfirmButton").tap()
         pause(2)
@@ -352,6 +353,87 @@ final class SmokeUITests: XCTestCase {
         tab("下載").tap()
         pause()
         snap("51-downloads-empty")
+    }
+}
+
+// MARK: - Other languages
+
+extension SmokeUITests {
+    private struct Language {
+        let code: String
+        let locale: String
+        let tabs: [String]
+        let cancel: String
+    }
+
+    func testTourEnglish() {
+        tour(Language(code: "en", locale: "en_US", tabs: ["Browse", "History", "Downloads", "Settings"], cancel: "Cancel"))
+    }
+
+    func testTourSimplifiedChinese() {
+        tour(Language(code: "zh-Hans", locale: "zh_CN", tabs: ["列表", "历史", "下载", "设置"], cancel: "取消"))
+    }
+
+    func testTourJapanese() {
+        tour(Language(code: "ja", locale: "ja_JP", tabs: ["一覧", "履歴", "ダウンロード", "設定"], cancel: "キャンセル"))
+    }
+
+    /// The main screens in one language, found by identifier (or by the expected tab titles).
+    private func tour(_ language: Language) {
+        app.launchArguments = ["-DemoMode", "-AppleLanguages", "(\(language.code))", "-AppleLocale", language.locale]
+        app.launch()
+        let name = { (step: String) in "80-\(language.code)-\(step)" }
+        XCTAssertTrue(element("galleryCard").waitForExistence(timeout: 10))
+        XCTAssertTrue(tab(language.tabs[0]).exists, "tab titles are localized")
+        pause(1.5)
+        snap(name("01-list"))
+
+        app.descendants(matching: .any).matching(identifier: "galleryCard").element(boundBy: 2).tap()
+        XCTAssertTrue(element("resumeButton").waitForExistence(timeout: 5))
+        pause()
+        snap(name("02-card"))
+        app.swipeUp()
+        pause()
+        snap(name("03-card-large"))
+        element("relatedButton").tap()
+        pause()
+        snap(name("04-related"))
+        app.navigationBars.buttons.firstMatch.tap()
+        pause()
+
+        element("resumeButton").tap()
+        pause(3)
+        snap(name("05-reader"))
+        element("readerMoreMenu").tap()
+        pause()
+        snap(name("06-reader-menu"))
+        app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.08, dy: 0.5)).tap()
+        pause()
+        app.navigationBars.buttons.firstMatch.tap()
+        pause()
+
+        element("searchButton").tap()
+        XCTAssertTrue(element("keywordField").waitForExistence(timeout: 5))
+        pause()
+        snap(name("07-search"))
+        app.swipeUp()
+        pause()
+        snap(name("08-search-categories"))
+        app.buttons[language.cancel].firstMatch.tap()
+        pause()
+
+        tab(language.tabs[1]).tap()
+        pause(1.5)
+        snap(name("09-history"))
+        tab(language.tabs[2]).tap()
+        pause(1.5)
+        snap(name("10-downloads"))
+        tab(language.tabs[3]).tap()
+        pause(2)
+        snap(name("11-settings"))
+        app.swipeUp()
+        pause()
+        snap(name("12-settings-more"))
     }
 }
 

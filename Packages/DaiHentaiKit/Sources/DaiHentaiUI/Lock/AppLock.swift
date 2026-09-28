@@ -17,7 +17,7 @@ final class AppLock {
         didSet { updateWindows() }
     }
     private(set) var isAuthenticating = false
-    private(set) var message: String?
+    private(set) var message: LocalizedStringResource?
 
     private let library: LibraryStore
     private let isDemo: Bool
@@ -91,17 +91,17 @@ final class AppLock {
         guard isLocked, !isAuthenticating else { return }
         isAuthenticating = true
         message = nil
-        let outcome = await BiometricAuthenticator.authenticate(reason: "使用這個 App 需要先解鎖呦", allowsPasscodeIfNotEnrolled: true)
+        let outcome = await BiometricAuthenticator.authenticate(reason: String(localized: .lockMessage), allowsPasscodeIfNotEnrolled: true)
         isAuthenticating = false
         switch outcome {
         case .success:
             withAnimation(.smooth) { isLocked = false }
         case .failed:
-            message = "沒有解開呦, 再試一次吧"
+            message = .lockFailed
         case .lockedOut:
-            message = "失敗太多次囉, 請先用密碼解鎖手機, 再回來按解鎖"
+            message = .lockLockout
         case .unavailable:
-            message = "這台裝置現在不能用 \(biometricKind.title) 解鎖"
+            message = .lockUnavailable(biometricKind.title)
         }
     }
 
@@ -110,7 +110,7 @@ final class AppLock {
         guard !isAuthenticating else { return .failed }
         isAuthenticating = true
         defer { isAuthenticating = false }
-        let outcome = await BiometricAuthenticator.authenticate(reason: "確認之後就會用這個方式解鎖")
+        let outcome = await BiometricAuthenticator.authenticate(reason: String(localized: .lockEnableReason))
         if outcome == .success { library.preferences.isAppLocked = true }
         return outcome
     }
@@ -120,7 +120,7 @@ final class AppLock {
         guard !isAuthenticating else { return false }
         isAuthenticating = true
         defer { isAuthenticating = false }
-        guard await BiometricAuthenticator.authenticate(reason: "驗證身份以解除鎖定", allowsPasscodeIfNotEnrolled: true) == .success else { return false }
+        guard await BiometricAuthenticator.authenticate(reason: String(localized: .lockDisableReason), allowsPasscodeIfNotEnrolled: true) == .success else { return false }
         library.preferences.isAppLocked = false
         return true
     }

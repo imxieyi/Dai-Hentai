@@ -17,7 +17,7 @@ struct ExKeyLoginView: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("請在此處輸入Cookie", text: $key, axis: .vertical)
+                    TextField(.exKeyPlaceholder, text: $key, axis: .vertical)
                         .lineLimit(2...5)
                         .font(.body.monospaced())
                         .autocorrectionDisabled()
@@ -29,7 +29,7 @@ struct ExKeyLoginView: View {
                     }
                     .labelStyle(.titleAndIcon)
                 } header: {
-                    Text("用Cookie登錄")
+                    Text(.exKeyHeader)
                 } footer: {
                     validation
                 }
@@ -41,17 +41,17 @@ struct ExKeyLoginView: View {
                     }
                 }
             }
-            .navigationTitle("ExKey 登錄")
+            .navigationTitle(.settingsExKeyLogIn)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消", systemImage: "xmark") { dismiss() }
+                    Button(.commonCancel, systemImage: "xmark") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     if isTesting {
                         ProgressView()
                     } else {
-                        Button("好", action: logIn)
+                        Button(.commonOkay) { logIn() }
                             .disabled(parsed == nil)
                             .accessibilityIdentifier("exKeyConfirm")
                     }
@@ -65,21 +65,20 @@ struct ExKeyLoginView: View {
     @ViewBuilder
     private var validation: some View {
         if key.isEmpty {
-            Text("格式是 32 碼的 pass hash, 接著 member id, 然後 x 加上 igneous。")
+            Text(.exKeyFormatHint)
         } else if let parsed {
-            Label("格式正確 · member id \(parsed.memberID)", systemImage: "checkmark.circle.fill")
+            Label(.exKeyValid(parsed.memberID), systemImage: "checkmark.circle.fill")
                 .foregroundStyle(.green)
         } else {
-            Label("格式不太對呦, 再檢查一下", systemImage: "xmark.circle.fill")
+            Label(.exKeyInvalid, systemImage: "xmark.circle.fill")
                 .foregroundStyle(.red)
         }
     }
 
-    private func message(for status: ProbeStatus) -> String {
+    private func message(for status: ProbeStatus) -> LocalizedStringResource {
         switch status {
-        case .networkFailed: "Cookie 存好了, 但是連不上 ExHentai, 等等在設定頁看看狀態"
-        case .parseFailed, .notLoggedIn: "ExHentai 沒有認這組 Cookie (只看到熊貓), 檢查一下 igneous 吧"
-        case .testing, .success: ""
+        case .networkFailed, .testing, .success: .exKeyNetworkFailed
+        case .parseFailed, .notLoggedIn: .exKeyRejected
         }
     }
 
@@ -91,7 +90,7 @@ struct ExKeyLoginView: View {
             isTesting = false
             result = status
             if status == .success {
-                model.toasts.show("登入成功", kaomoji: "O3Ob")
+                model.toasts.show(.commonLoggedIn, kaomoji: "O3Ob")
                 dismiss()
             }
         }

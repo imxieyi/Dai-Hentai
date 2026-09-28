@@ -37,18 +37,18 @@ struct GalleryListView: View {
         .background(Color.canvas)
         .refreshable { await feed.reload(feedKey, service: model.makeService()) }
         .task(id: feedKey) { await feed.loadIfNeeded(feedKey, service: model.makeService()) }
-        .navigationTitle("列表")
+        .navigationTitle(.tabList)
         .toolbar {
             if !model.isLoggedIn {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Ex") { router.isExWebLoginPresented = true }
+                    Button(String("Ex")) { router.isExWebLoginPresented = true }
                         .fontWeight(.semibold)
-                        .accessibilityLabel("登入 ExHentai")
+                        .accessibilityLabel(.listLogInEx)
                         .accessibilityIdentifier("exLoginButton")
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button("搜尋", systemImage: "magnifyingglass") { router.isSearchPresented = true }
+                Button(.commonSearch, systemImage: "magnifyingglass") { router.isSearchPresented = true }
                     .badge(model.library.searchFilter.activeRefinementCount)
                     .accessibilityIdentifier("searchButton")
             }
@@ -64,15 +64,15 @@ struct GalleryListView: View {
     private var content: some View {
         switch feed.state {
         case .idle, .loading:
-            FooterRow(text: "列表載入中...", showsSpinner: true)
+            FooterRow(text: .listLoading, showsSpinner: true)
                 .padding(.top, 80)
                 .accessibilityIdentifier("listLoading")
         case .empty:
-            KaomojiState(kaomoji: "O3O", title: "找不到相關作品呦", message: model.library.searchFilter.isDefault ? nil : "換個搜尋條件試試看吧") {
+            KaomojiState(kaomoji: "O3O", title: .listNoResults, message: model.library.searchFilter.isDefault ? nil : .listNoResultsHint) {
                 if !model.library.searchFilter.isDefault {
-                    Button("調整搜尋條件") { model.router.isSearchPresented = true }
+                    Button(.listChangeFilters) { model.router.isSearchPresented = true }
                         .buttonStyle(.borderedProminent)
-                    Button("清除所有條件") { model.library.searchFilter = .default }
+                    Button(.listClearFilters) { model.library.searchFilter = .default }
                         .buttonStyle(.bordered)
                 }
             }
@@ -99,7 +99,7 @@ struct GalleryListView: View {
                 .contextMenu { GalleryContextMenu(gallery: gallery) }
                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
                     if badges[gallery.id]?.isDownloaded != true {
-                        Button("下載", systemImage: "arrow.down.circle") { model.download(gallery) }
+                        Button(.commonDownload, systemImage: "arrow.down.circle") { model.download(gallery) }
                             .tint(.moeAccent)
                             .accessibilityIdentifier("swipeDownload")
                     }
@@ -113,11 +113,11 @@ struct GalleryListView: View {
     @ViewBuilder
     private var footer: some View {
         if feed.isLoadingMore {
-            FooterRow(text: "列表載入中...", showsSpinner: true)
+            FooterRow(text: .listLoading, showsSpinner: true)
         } else if feed.loadMoreFailed {
-            FooterRow(text: "載入失敗了 O口O 點我再試一次") { feed.loadMore() }
+            FooterRow(text: .listLoadMoreFailed) { feed.loadMore() }
         } else if feed.reachedEnd {
-            FooterRow(text: "沒有更多作品囉 O3O")
+            FooterRow(text: .listEnd)
         }
     }
 
@@ -125,20 +125,20 @@ struct GalleryListView: View {
     private func failure(_ error: SiteError) -> some View {
         if model.site == .exHentai, error == .parse {
             // The sad panda: ExHentai answered with an empty page, so the cookies are no good.
-            KaomojiState(kaomoji: "(´・ω・`)", title: "只看到熊貓", message: "Ex 的登入好像失效了, 重新登入或是登出改用 E-Hentai 吧") {
-                Button("用網頁重新登入") { model.router.isExWebLoginPresented = true }
+            KaomojiState(kaomoji: "(´・ω・`)", title: .listSadPanda, message: .listSadPandaMessage) {
+                Button(.listWebLogInAgain) { model.router.isExWebLoginPresented = true }
                     .buttonStyle(.borderedProminent)
-                Button("點我登出") { Task { await model.logOut() } }
+                Button(.listLogOut) { Task { await model.logOut() } }
                     .buttonStyle(.bordered)
             }
         } else if error == .parse {
-            KaomojiState(kaomoji: "O口O", title: "列表解析失敗", message: "網站可能改版了, 等等再試試看") {
-                Button("再試一次") { Task { await feed.reload(feedKey, service: model.makeService()) } }
+            KaomojiState(kaomoji: "O口O", title: .listParseFailed, message: .listParseFailedMessage) {
+                Button(.commonTryAgain) { Task { await feed.reload(feedKey, service: model.makeService()) } }
                     .buttonStyle(.borderedProminent)
             }
         } else {
-            KaomojiState(kaomoji: "O口O", title: "網路錯誤", message: "連不上網站, 檢查一下網路再試一次") {
-                Button("再試一次") { Task { await feed.reload(feedKey, service: model.makeService()) } }
+            KaomojiState(kaomoji: "O口O", title: .commonNetworkError, message: .listNetworkMessage) {
+                Button(.commonTryAgain) { Task { await feed.reload(feedKey, service: model.makeService()) } }
                     .buttonStyle(.borderedProminent)
                     .accessibilityIdentifier("retryButton")
             }

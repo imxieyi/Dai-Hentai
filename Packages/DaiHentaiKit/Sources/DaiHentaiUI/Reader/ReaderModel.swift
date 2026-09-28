@@ -124,13 +124,13 @@ final class ReaderModel {
     }
 
     /// Legacy title line: 「當前:12 總共:40」 / 「當前:12 卡在:13」 / 「讀取中」.
-    var statusText: String {
-        guard let downloader, downloader.readyCount > 0 else { return "讀取中" }
+    var statusText: LocalizedStringResource {
+        guard let downloader, downloader.readyCount > 0 else { return .readerLoading }
         let stuck = direction == .vertical ? (runEnd < pageCount ? runEnd : nil) : firstMissing(from: currentPage)
         if let stuck {
-            return "當前:\(currentPage + 1) 卡在:\(stuck + 1)"
+            return .readerStatusStuck(currentPage + 1, stuck + 1)
         }
-        return "當前:\(currentPage + 1) 總共:\(pageCount)"
+        return .readerStatusTotal(currentPage + 1, pageCount)
     }
 
     // MARK: - Position
@@ -249,7 +249,7 @@ final class ReaderModel {
         let page = currentPage
         direction = newDirection
         app.library.preferences.readingDirection = newDirection
-        app.toasts.show(newDirection == .horizontal ? "閱讀方向改為橫向" : "閱讀方向改為直向", duration: .seconds(1))
+        app.toasts.show(newDirection == .horizontal ? .readerSwitchedHorizontal : .readerSwitchedVertical, duration: .seconds(1))
         if newDirection == .vertical, !(runStart...runEnd).contains(page) {
             runStart = page
         }
@@ -311,6 +311,6 @@ final class ReaderModel {
         saveTask?.cancel()
         app.delete(gallery)
         app.router.popReader(of: gallery)
-        app.toasts.show("作品刪掉囉", kaomoji: "O3O", symbol: "trash")
+        app.toasts.show(.readerDeleted, kaomoji: "O3O", symbol: "trash")
     }
 }

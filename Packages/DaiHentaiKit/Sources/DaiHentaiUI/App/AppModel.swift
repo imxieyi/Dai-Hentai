@@ -93,7 +93,7 @@ public final class AppModel {
             UserDefaults.standard.set(true, forKey: LegacyCouchbaseImporter.completedDefaultsKey)
             library.reloadSettings()
             if summary.galleries > 0 {
-                toasts.show("舊版的 \(summary.galleries) 部作品紀錄都搬過來囉", kaomoji: "O3Ob", duration: .seconds(3))
+                toasts.show(.toastLegacyImported(summary.galleries), kaomoji: "O3Ob", duration: .seconds(3))
             }
         } catch {
             // Try again on the next launches, but don't nag forever about a damaged old database.
@@ -101,9 +101,9 @@ public final class AppModel {
             UserDefaults.standard.set(attempts, forKey: Self.importAttemptsKey)
             if attempts >= 3 {
                 UserDefaults.standard.set(true, forKey: LegacyCouchbaseImporter.completedDefaultsKey)
-                toasts.show("舊版紀錄讀不出來, 只好放棄搬家了", kaomoji: "O口O", duration: .seconds(3))
+                toasts.show(.toastLegacyImportGaveUp, kaomoji: "O口O", duration: .seconds(3))
             } else {
-                toasts.show("舊版紀錄搬家失敗, 下次開啟會再試一次", kaomoji: "O口O", duration: .seconds(3))
+                toasts.show(.toastLegacyImportFailed, kaomoji: "O口O", duration: .seconds(3))
             }
         }
     }
@@ -129,7 +129,7 @@ public final class AppModel {
             await ExSession.logOut()
         }
         refreshLogin()
-        toasts.show("登出囉", kaomoji: "O3O")
+        toasts.show(.toastLoggedOut, kaomoji: "O3O")
     }
 
     /// ExKey login: writes the cookies, then only reports success when ExHentai really answers.
@@ -155,7 +155,7 @@ public final class AppModel {
     func didFinishWebLogin() async {
         if !isDemo { await ExSession.importWebKitCookies() }
         refreshLogin()
-        if isLoggedIn { toasts.show("登入成功", kaomoji: "O3Ob") }
+        if isLoggedIn { toasts.show(.commonLoggedIn, kaomoji: "O3Ob") }
     }
 
     /// Demo stand-in for the web login.
@@ -170,7 +170,7 @@ public final class AppModel {
     func download(_ gallery: GalleryInfo) {
         guard !library.isDownloaded(gallery) || !downloads.isDownloading(gallery.id) else { return }
         downloads.startDownload(gallery)
-        toasts.show("開始下載囉", kaomoji: "O3O", symbol: "arrow.down.circle.fill")
+        toasts.show(.toastDownloadStarted, kaomoji: "O3O", symbol: "arrow.down.circle.fill")
     }
 
     /// Deletes a gallery (history record or download) with its images.

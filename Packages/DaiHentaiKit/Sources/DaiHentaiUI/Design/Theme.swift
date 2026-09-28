@@ -52,18 +52,29 @@ extension GalleryCategory {
         }
     }
 
-    var chineseName: String {
+    /// The category's name in the app's language, or `nil` when it is the same as the site's English name.
+    var localizedName: String? {
+        let name = String(localized: localizedNameResource)
+        return name == rawValue ? nil : name
+    }
+
+    /// The site's English name, followed by the localized name when it differs.
+    var spokenName: String {
+        localizedName.map { "\(rawValue) \($0)" } ?? rawValue
+    }
+
+    private var localizedNameResource: LocalizedStringResource {
         switch self {
-        case .doujinshi: "同人誌"
-        case .manga: "漫畫"
-        case .artistCG: "畫師 CG"
-        case .gameCG: "遊戲 CG"
-        case .western: "西方"
-        case .nonH: "非 H"
-        case .imageSet: "圖集"
-        case .cosplay: "Cosplay"
-        case .asianPorn: "亞洲"
-        case .misc: "雜項"
+        case .doujinshi: .categoryDoujinshi
+        case .manga: .categoryManga
+        case .artistCG: .categoryArtistCG
+        case .gameCG: .categoryGameCG
+        case .western: .categoryWestern
+        case .nonH: .categoryNonH
+        case .imageSet: .categoryImageSet
+        case .cosplay: .categoryCosplay
+        case .asianPorn: .categoryAsianPorn
+        case .misc: .categoryMisc
         }
     }
 }

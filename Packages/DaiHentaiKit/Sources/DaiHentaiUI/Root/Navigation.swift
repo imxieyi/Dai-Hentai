@@ -36,24 +36,24 @@ struct GalleryContextMenu: View {
     var body: some View {
         let isDownloaded = model.library.isDownloaded(gallery)
         let isDownloading = model.downloads.isDownloading(gallery.id)
-        Button("我要現在看", systemImage: "book") {
+        Button(.commonReadNow, systemImage: "book") {
             model.router.openReader(gallery)
         }
         if !isDownloaded || !isDownloading {
-            Button(isDownloaded ? "繼續下載" : "我要下載", systemImage: "arrow.down.circle") {
+            Button(isDownloaded ? LocalizedStringResource.commonResumeDownload : .commonWantDownload, systemImage: "arrow.down.circle") {
                 model.download(gallery)
             }
             .disabled(isDownloaded && isDownloading)
         }
-        Button("用相關字詞搜尋", systemImage: "text.magnifyingglass") {
+        Button(.commonSearchRelated, systemImage: "text.magnifyingglass") {
             model.router.galleryCard = GalleryCardRoute(gallery: gallery, relatedWord: "")
         }
         ShareLink(item: gallery.galleryURL(on: model.site), subject: Text(gallery.bestTitle), message: Text(gallery.bestTitle)) {
-            Label("分享", systemImage: "square.and.arrow.up")
+            Label(.commonShare, systemImage: "square.and.arrow.up")
         }
         if showsDelete {
             Divider()
-            Button(isDownloaded ? "刪除下載" : "刪除紀錄", systemImage: "trash", role: .destructive) {
+            Button(isDownloaded ? LocalizedStringResource.menuDeleteDownload : .menuDeleteRecord, systemImage: "trash", role: .destructive) {
                 withAnimation { model.delete(gallery) }
             }
         }

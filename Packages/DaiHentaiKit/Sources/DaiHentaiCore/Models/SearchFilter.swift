@@ -27,13 +27,13 @@ public enum MinimumRating: Int, CaseIterable, Codable, Sendable, Identifiable {
 
     public var id: Int { rawValue }
 
-    public var title: String {
+    public var title: LocalizedStringResource {
         switch self {
-        case .any: "不限"
-        case .two: "2星以上"
-        case .three: "3星以上"
-        case .four: "4星以上"
-        case .five: "滿星"
+        case .any: .ratingAny
+        case .two: .ratingTwo
+        case .three: .ratingThree
+        case .four: .ratingFour
+        case .five: .ratingFive
         }
     }
 
@@ -49,11 +49,11 @@ public enum LanguageFilter: String, CaseIterable, Codable, Sendable, Identifiabl
 
     public var id: String { rawValue }
 
-    public var title: String {
+    public var title: LocalizedStringResource {
         switch self {
-        case .any: "不限"
-        case .chineseOnly: "中文"
-        case .originalOnly: "原汁原味不翻譯"
+        case .any: .languageFilterAny
+        case .chineseOnly: .languageFilterChinese
+        case .originalOnly: .languageFilterOriginal
         }
     }
 

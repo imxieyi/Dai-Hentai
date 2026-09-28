@@ -23,20 +23,20 @@ struct DownloadsView: View {
         let finished = downloads.filter { !model.downloads.isDownloading($0.key) }
         ScrollView {
             if downloads.isEmpty {
-                KaomojiState(kaomoji: "O3O", title: "還沒有下載任何作品呦", message: "在作品卡或閱讀畫面按「我要下載」, 就可以離線看囉")
+                KaomojiState(kaomoji: "O3O", title: .downloadsEmpty, message: .downloadsEmptyMessage)
                     .padding(.top, 80)
             } else {
                 LazyVStack(alignment: .leading, spacing: Metrics.cardSpacing) {
                     summary
                     if !active.isEmpty {
-                        header("下載中")
+                        header(.commonDownloading)
                         grid(active)
                     }
                     if !finished.isEmpty {
-                        header("已下載")
+                        header(.commonDownloaded)
                         grid(finished)
                     }
-                    Text("下載的時候螢幕會保持開著, 全部下載完才會恢復自動鎖定。")
+                    Text(.downloadsAwakeNote)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, Metrics.sideMargin)
@@ -47,7 +47,7 @@ struct DownloadsView: View {
         }
         .swipeActionsContainer()
         .background(Color.canvas)
-        .navigationTitle("下載")
+        .navigationTitle(.tabDownloads)
         .task(id: downloads.map(\.key) + active.map(\.key)) {
             await measure()
         }
@@ -58,13 +58,13 @@ struct DownloadsView: View {
 
     private var summary: some View {
         HStack(spacing: 6) {
-            Text("共 \(downloads.count) 部")
+            Text(.downloadsCount(downloads.count))
             if let totalBytes {
-                Text("·")
+                Text(verbatim: "·")
                 Text(totalBytes.formatted(.byteCount(style: .file)))
                     .contentTransition(.numericText())
             } else {
-                Text("· 計算中...")
+                Text(.downloadsCalculatingSize)
             }
         }
         .font(.subheadline)
@@ -74,7 +74,7 @@ struct DownloadsView: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func header(_ title: String) -> some View {
+    private func header(_ title: LocalizedStringResource) -> some View {
         Text(title)
             .font(.title3.weight(.bold))
             .fontDesign(.rounded)
@@ -136,12 +136,12 @@ private struct IncompleteRow: View {
 
     var body: some View {
         HStack {
-            Label("未完成 \(onDisk)/\(total)", systemImage: "exclamationmark.circle")
+            Label(.downloadsIncomplete(onDisk, total), systemImage: "exclamationmark.circle")
                 .font(.footnote.weight(.medium))
                 .foregroundStyle(.orange)
                 .monospacedDigit()
             Spacer()
-            Button("繼續下載", systemImage: "arrow.down.circle", action: resume)
+            Button(.commonResumeDownload, systemImage: "arrow.down.circle", action: resume)
                 .font(.footnote.weight(.semibold))
                 .buttonStyle(.bordered)
                 .controlSize(.small)

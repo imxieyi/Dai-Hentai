@@ -23,7 +23,7 @@ struct HistoryView: View {
         let filtered = filteredHistories
         ScrollView {
             if histories.isEmpty {
-                KaomojiState(kaomoji: "O3O", title: "你還沒有看過任何作品呦")
+                KaomojiState(kaomoji: "O3O", title: .historyEmpty)
                     .padding(.top, 80)
             } else if filtered.isEmpty {
                 ContentUnavailableView.search(text: searchText)
@@ -33,8 +33,8 @@ struct HistoryView: View {
                     if searchText.isEmpty, !shelf.isEmpty {
                         ContinueShelf(galleries: shelf)
                     }
-                    ForEach(sections(filtered), id: \.title) { section in
-                        Text(section.title)
+                    ForEach(sections(filtered), id: \.day) { section in
+                        Text(section.day.title)
                             .font(.title3.weight(.bold))
                             .fontDesign(.rounded)
                             .padding(.horizontal, Metrics.sideMargin)
@@ -53,25 +53,25 @@ struct HistoryView: View {
         }
         .swipeActionsContainer()
         .background(Color.canvas)
-        .navigationTitle("歷史")
-        .searchable(text: $searchText, prompt: "搜尋看過的作品")
+        .navigationTitle(.tabHistory)
+        .searchable(text: $searchText, prompt: Text(.historySearchPrompt))
         .toolbar {
             if !histories.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("清除所有觀看紀錄", systemImage: "trash") { isConfirmingClear = true }
+                    Button(.commonClearHistory, systemImage: "trash") { isConfirmingClear = true }
                         .accessibilityIdentifier("clearHistoryButton")
                 }
             }
         }
-        .alert("O3O", isPresented: $isConfirmingClear) {
-            Button("好 O3Ob", role: .destructive) { clearAll() }
-            Button("先不要好了 OwO\"", role: .cancel) {}
+        .alert(Text(verbatim: "O3O"), isPresented: $isConfirmingClear) {
+            Button(.commonOkayHappy, role: .destructive) { clearAll() }
+            Button(.commonNotNow, role: .cancel) {}
         } message: {
-            Text("我們現在要刪除所有觀看紀錄囉!")
+            Text(.commonConfirmClearHistory)
         }
         .overlay {
             if let clearProgress {
-                GlassHUD(title: "作品刪除中 ( \(clearProgress.done) / \(clearProgress.total) )", progress: clearProgress.total == 0 ? 1 : Double(clearProgress.done) / Double(clearProgress.total))
+                GlassHUD(title: .commonDeletingProgress(clearProgress.done, clearProgress.total), progress: clearProgress.total == 0 ? 1 : Double(clearProgress.done) / Double(clearProgress.total))
             }
         }
     }
@@ -90,30 +90,42 @@ struct HistoryView: View {
         Array(histories.filter { $0.lastReadPage > 1 && ($0.fileCount == 0 || $0.lastReadPage < $0.fileCount) }.prefix(10))
     }
 
+    private enum Day: CaseIterable {
+        case today, yesterday, thisWeek, earlier
+
+        var title: LocalizedStringResource {
+            switch self {
+            case .today: .historyToday
+            case .yesterday: .historyYesterday
+            case .thisWeek: .historyThisWeek
+            case .earlier: .historyEarlier
+            }
+        }
+    }
+
     private struct DaySection {
-        let title: String
+        let day: Day
         let items: [StoredGallery]
     }
 
     private func sections(_ galleries: [StoredGallery]) -> [DaySection] {
         let calendar = Calendar.current
         let now = Date.now
-        let order = ["今天", "昨天", "本週", "更早"]
-        var groups: [String: [StoredGallery]] = [:]
+        var groups: [Day: [StoredGallery]] = [:]
         for gallery in galleries {
-            let title: String
+            let day: Day
             if calendar.isDateInToday(gallery.lastViewedAt) {
-                title = "今天"
+                day = .today
             } else if calendar.isDateInYesterday(gallery.lastViewedAt) {
-                title = "昨天"
+                day = .yesterday
             } else if let week = calendar.dateInterval(of: .weekOfYear, for: now), week.contains(gallery.lastViewedAt) || now.timeIntervalSince(gallery.lastViewedAt) < 7 * 86_400 {
-                title = "本週"
+                day = .thisWeek
             } else {
-                title = "更早"
+                day = .earlier
             }
-            groups[title, default: []].append(gallery)
+            groups[day, default: []].append(gallery)
         }
-        return order.compactMap { title in groups[title].map { DaySection(title: title, items: $0) } }
+        return Day.allCases.compactMap { day in groups[day].map { DaySection(day: day, items: $0) } }
     }
 
     private func clearAll() {
@@ -124,7 +136,7 @@ struct HistoryView: View {
             }
             try? await Task.sleep(for: .milliseconds(300))
             withAnimation { clearProgress = nil }
-            model.toasts.show("觀看紀錄都清掉囉", kaomoji: "O3Ob")
+            model.toasts.show(.commonHistoryCleared, kaomoji: "O3Ob")
         }
     }
 }
@@ -147,7 +159,7 @@ struct LibraryCard: View {
         .buttonStyle(.plain)
         .contextMenu { GalleryContextMenu(gallery: gallery, showsDelete: true) }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            Button(stored.isDownloaded ? "刪除" : "刪除紀錄", systemImage: "trash", role: .destructive) {
+            Button(stored.isDownloaded ? LocalizedStringResource.commonDelete : .swipeDeleteRecord, systemImage: "trash", role: .destructive) {
                 if stored.isDownloaded {
                     isConfirmingDelete = true
                 } else {
@@ -157,15 +169,15 @@ struct LibraryCard: View {
         }
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
             if !stored.isDownloaded {
-                Button("下載", systemImage: "arrow.down.circle") { model.download(gallery) }
+                Button(.commonDownload, systemImage: "arrow.down.circle") { model.download(gallery) }
                     .tint(.moeAccent)
             }
         }
-        .alert("O3O", isPresented: $isConfirmingDelete) {
-            Button("好 O3Ob", role: .destructive) { withAnimation { model.delete(gallery) } }
-            Button("先不要好了 OwO\"", role: .cancel) {}
+        .alert(Text(verbatim: "O3O"), isPresented: $isConfirmingDelete) {
+            Button(.commonOkayHappy, role: .destructive) { withAnimation { model.delete(gallery) } }
+            Button(.commonNotNow, role: .cancel) {}
         } message: {
-            Text("我們現在要刪除這部作品囉!")
+            Text(.commonConfirmDeleteGallery)
         }
     }
 }
@@ -178,7 +190,7 @@ private struct ContinueShelf: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("繼續看")
+            Text(.accessoryResume)
                 .font(.title3.weight(.bold))
                 .fontDesign(.rounded)
                 .padding(.horizontal, Metrics.sideMargin)
@@ -203,7 +215,7 @@ private struct ContinueShelf: View {
                                     .lineLimit(2)
                                     .frame(width: 110, alignment: .leading)
                                     .japaneseTypesetting(!gallery.titleJpn.isEmpty)
-                                Text("看到 \(stored.lastReadPage)/\(stored.fileCount)")
+                                Text(.commonReadProgress(stored.lastReadPage, stored.fileCount))
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)
                                     .monospacedDigit()
@@ -211,7 +223,7 @@ private struct ContinueShelf: View {
                         }
                         .buttonStyle(.plain)
                         .accessibilityElement(children: .combine)
-                        .accessibilityHint("從第 \(stored.lastReadPage) 頁繼續看")
+                        .accessibilityHint(Text(.historyResumeHint(stored.lastReadPage)))
                     }
                 }
                 .padding(.horizontal, Metrics.sideMargin)
