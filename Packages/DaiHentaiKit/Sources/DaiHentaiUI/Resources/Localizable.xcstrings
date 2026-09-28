@@ -1045,6 +1045,36 @@
         }
       }
     },
+    "Common.DownloadMissingImages" : {
+      "extractionState" : "manual",
+      "comment" : "Downloads the missing pages and covers of downloads",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download Missing Images"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "足りない画像をダウンロード"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载缺少的图片"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載缺少的圖片"
+          }
+        }
+      }
+    },
     "Common.Downloaded" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1705,6 +1735,35 @@
         }
       }
     },
+    "Common.Stop" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止"
+          }
+        }
+      }
+    },
     "Common.TryAgain" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1730,6 +1789,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "再試一次"
+          }
+        }
+      }
+    },
+    "Common.UpgradeToOriginals" : {
+      "extractionState" : "manual",
+      "comment" : "Replaces the reduced-quality pages of downloads with the original files",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upgrade to Originals"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "元画像にアップグレード"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "升级成原图"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "升級成原圖"
           }
         }
       }
@@ -1893,6 +1982,36 @@
         }
       }
     },
+    "Downloads.DownloadingMissingImages" : {
+      "extractionState" : "manual",
+      "comment" : "Gallery being worked on / galleries in the job",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading missing images %1$lld/%2$lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "足りない画像をダウンロード中 %1$lld/%2$lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在下载缺少的图片 %1$lld/%2$lld"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在下載缺少的圖片 %1$lld/%2$lld"
+          }
+        }
+      }
+    },
     "Downloads.Empty" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1951,6 +2070,48 @@
         }
       }
     },
+    "Downloads.GalleryCount" : {
+      "extractionState" : "manual",
+      "comment" : "How many downloads a job would work on",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld gallery"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld galleries"
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 件"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 部"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 部"
+          }
+        }
+      }
+    },
     "Downloads.Incomplete" : {
       "extractionState" : "manual",
       "comment" : "Pages on disk / page count",
@@ -1981,36 +2142,6 @@
         }
       }
     },
-    "Downloads.IncompleteMissingCover" : {
-      "extractionState" : "manual",
-      "comment" : "Pages on disk / page count, and the cover isn't saved",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Incomplete %1$lld/%2$lld · No cover"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未完了 %1$lld/%2$lld · 表紙なし"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未完成 %1$lld/%2$lld · 缺少封面"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未完成 %1$lld/%2$lld · 缺少封面"
-          }
-        }
-      }
-    },
     "Downloads.MissingCover" : {
       "extractionState" : "manual",
       "comment" : "A downloaded gallery whose cover isn't saved (3.x never saved covers)",
@@ -2037,6 +2168,108 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "缺少封面"
+          }
+        }
+      }
+    },
+    "Downloads.Originals" : {
+      "extractionState" : "manual",
+      "comment" : "Pages on disk that are the original files / pages on disk",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Originals %1$lld/%2$lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "元画像 %1$lld/%2$lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原图 %1$lld/%2$lld"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原圖 %1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "Downloads.PageCount" : {
+      "extractionState" : "manual",
+      "comment" : "How many pages a job would fetch",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld page"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld pages"
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld ページ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 页"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 頁"
+          }
+        }
+      }
+    },
+    "Downloads.UpgradingToOriginals" : {
+      "extractionState" : "manual",
+      "comment" : "Gallery being worked on / galleries in the job",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upgrading to originals %1$lld/%2$lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "元画像にアップグレード中 %1$lld/%2$lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在升级成原图 %1$lld/%2$lld"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在升級成原圖 %1$lld/%2$lld"
           }
         }
       }
@@ -6014,6 +6247,36 @@
         }
       }
     },
+    "Toast.DownloadFinishedWithoutOriginals" : {
+      "extractionState" : "manual",
+      "comment" : "The argument is the gallery title. The site refused the original files (usually: not logged in)",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” finished downloading, but not in original quality"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」のダウンロードが終わったけど、元画像はもらえなかったよ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」下载完成啦，但拿不到原图"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」下載完成囉，但拿不到原圖"
+          }
+        }
+      }
+    },
     "Toast.DownloadStarted" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6167,6 +6430,154 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "登出囉"
+          }
+        }
+      }
+    },
+    "Toast.MissingImagesDownloaded" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing images downloaded"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "足りない画像をダウンロードしたよ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺少的图片下载好啦"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺少的圖片下載好囉"
+          }
+        }
+      }
+    },
+    "Toast.MissingImagesDownloadedWithoutOriginals" : {
+      "extractionState" : "manual",
+      "comment" : "The site refused the original files (usually: not logged in), so pages were saved as the site shows them",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing images downloaded, but not in original quality"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "足りない画像をダウンロードしたけど、元画像はもらえなかったよ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺少的图片下载好啦，但拿不到原图"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺少的圖片下載好囉，但拿不到原圖"
+          }
+        }
+      }
+    },
+    "Toast.OriginalsNeedLogin" : {
+      "extractionState" : "manual",
+      "comment" : "The site refused the original files, usually because the user isn't logged in",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn’t get the originals. Log in first."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "元画像をもらえなかったよ。先にログインしてね"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拿不到原图：要先登录哦"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拿不到原圖：要先登入喔"
+          }
+        }
+      }
+    },
+    "Toast.RateLimited" : {
+      "extractionState" : "manual",
+      "comment" : "The site's image limits ran out, so every download stopped",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image limit reached. Downloads stopped."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画像の閲覧制限に達したから、ダウンロードを止めたよ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片额度用完了，下载先停下来啦"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "圖片額度用完了，下載先停下來囉"
+          }
+        }
+      }
+    },
+    "Toast.UpgradedToOriginals" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upgraded to originals"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "元画像にアップグレードしたよ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "升级成原图啦"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "升級成原圖囉"
           }
         }
       }

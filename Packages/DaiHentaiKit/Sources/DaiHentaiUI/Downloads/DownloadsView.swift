@@ -10,18 +10,20 @@ struct DownloadsTab: View {
     }
 }
 
-/// 下載: running downloads, then everything downloaded (with a completeness check).
+/// 下載: the two jobs for every download at once (「下載缺少的圖片」, 「升級成原圖」), running downloads,
+/// then everything downloaded, each with what it still lacks.
 struct DownloadsView: View {
     @Environment(AppModel.self) private var model
     @Query(filter: #Predicate<StoredGallery> { $0.isDownloaded }, sort: \StoredGallery.lastViewedAt, order: .reverse)
     private var downloads: [StoredGallery]
-    @State private var pagesOnDisk: [String: Int] = [:]
-    @State private var coverMissing: Set<String> = []
+    @State private var gaps: [String: DownloadGaps] = [:]
     @State private var totalBytes: Int64?
 
     var body: some View {
         let active = downloads.filter { model.downloads.isDownloading($0.key) }
         let finished = downloads.filter { !model.downloads.isDownloading($0.key) }
+        let lackingImages = finished.filter { gaps[$0.key]?.isMissingImages == true }
+        let lackingOriginals = finished.filter { gaps[$0.key]?.hasReducedPages == true }
         ScrollView {
             if downloads.isEmpty {
                 KaomojiState(kaomoji: "O3O", title: .downloadsEmpty, message: .downloadsEmptyMessage)
@@ -29,6 +31,12 @@ struct DownloadsView: View {
             } else {
                 LazyVStack(alignment: .leading, spacing: Metrics.cardSpacing) {
                     summary
+                    if model.downloads.batch != nil || !lackingImages.isEmpty || !lackingOriginals.isEmpty {
+                        BatchPanel(
+                            missing: BatchPanel.Job(galleries: lackingImages.map(\.info), pages: lackingImages.reduce(0) { $0 + (gaps[$1.key]?.missingPageCount ?? 0) }),
+                            originals: BatchPanel.Job(galleries: lackingOriginals.map(\.info), pages: lackingOriginals.reduce(0) { $0 + (gaps[$1.key]?.reducedPageCount ?? 0) })
+                        )
+                    }
                     if !active.isEmpty {
                         header(.commonDownloading)
                         grid(active)
@@ -89,13 +97,8 @@ struct DownloadsView: View {
             ForEach(items) { stored in
                 VStack(spacing: 0) {
                     LibraryCard(stored: stored, extraBadge: badge(for: stored))
-                    if let onDisk = pagesOnDisk[stored.key], !model.downloads.isDownloading(stored.key) {
-                        let pagesMissing = stored.fileCount > 0 && onDisk < stored.fileCount
-                        if pagesMissing || coverMissing.contains(stored.key) {
-                            IncompleteRow(onDisk: onDisk, total: stored.fileCount, pagesMissing: pagesMissing, coverMissing: coverMissing.contains(stored.key)) {
-                                model.downloads.resume(stored.info)
-                            }
-                        }
+                    if let gaps = gaps[stored.key], !gaps.isEmpty, !model.downloads.isDownloading(stored.key) {
+                        GapsRow(gaps: gaps)
                     }
                 }
             }
@@ -105,66 +108,158 @@ struct DownloadsView: View {
 
     private func badge(for stored: StoredGallery) -> CardBadge {
         if let progress = model.downloads.progress(for: stored.key) { return .downloading(progress) }
-        if let onDisk = pagesOnDisk[stored.key], stored.fileCount > 0, onDisk < stored.fileCount {
+        if gaps[stored.key]?.isMissingPages == true {
             // 「未完成」 is shown in the row under the card.
             return .none
         }
         return .downloaded
     }
 
-    /// Counts pages on disk per gallery, notes missing covers and adds up the size, off the main actor.
+    /// Checks each download's folder (pages, originals, cover) and adds up the size, off the main actor.
     private func measure() async {
-        let items = downloads.map { (key: $0.key, folder: $0.info.folderName, gid: $0.gid, hasThumb: $0.info.thumbURL != nil) }
+        let items = downloads.map { (key: $0.key, info: $0.info) }
         let files = model.library.files
-        let result = await Task.detached(priority: .utility) { () -> ([String: Int], Set<String>, Int64) in
-            var counts: [String: Int] = [:]
-            var noCover: Set<String> = []
+        let result = await Task.detached(priority: .utility) { () -> ([String: DownloadGaps], Int64) in
+            var gaps: [String: DownloadGaps] = [:]
             var bytes: Int64 = 0
             for item in items {
-                let contents = files.contents(ofFolder: item.folder, gid: item.gid)
-                counts[item.key] = contents.pages
-                if item.hasThumb, !contents.hasCover { noCover.insert(item.key) }
-                bytes += files.size(ofFolder: item.folder)
+                let folder = item.info.folderName
+                gaps[item.key] = DownloadGaps(info: item.info, contents: files.contents(ofFolder: folder, gid: item.info.gid))
+                bytes += files.size(ofFolder: folder)
             }
-            return (counts, noCover, bytes)
+            return (gaps, bytes)
         }.value
-        pagesOnDisk = result.0
-        coverMissing = result.1
-        withAnimation { totalBytes = result.2 }
+        gaps = result.0
+        withAnimation { totalBytes = result.1 }
     }
 }
 
-/// 「未完成 7/18 · 繼續下載」 under a download that stopped, or 「缺少封面」 when only the cover is
-/// missing (3.x didn't save covers). 繼續下載 fetches whatever is missing.
-private struct IncompleteRow: View {
-    let onDisk: Int
-    let total: Int
-    let pagesMissing: Bool
-    let coverMissing: Bool
-    let resume: () -> Void
+/// 「下載缺少的圖片」 and 「升級成原圖」 for every download at once, at the top so a long list doesn't
+/// bury them. They run one gallery at a time; while one runs, it shows its progress and 停止 instead.
+private struct BatchPanel: View {
+    struct Job {
+        var galleries: [GalleryInfo]
+        var pages: Int
+    }
 
-    private var title: LocalizedStringResource {
-        switch (pagesMissing, coverMissing) {
-        case (true, true): .downloadsIncompleteMissingCover(onDisk, total)
-        case (true, false): .downloadsIncomplete(onDisk, total)
-        default: .downloadsMissingCover
+    let missing: Job
+    let originals: Job
+
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        Group {
+            if let batch = model.downloads.batch {
+                running(batch)
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: Metrics.cardSpacing) { buttons }
+                    VStack(spacing: 8) { buttons }
+                }
+            }
+        }
+        .padding(.horizontal, Metrics.sideMargin)
+    }
+
+    @ViewBuilder
+    private var buttons: some View {
+        if !missing.galleries.isEmpty {
+            button(.commonDownloadMissingImages, systemImage: "arrow.down.circle", job: missing, identifier: "downloadMissingButton") {
+                model.downloads.startBatch(.missing, galleries: missing.galleries)
+            }
+        }
+        if !originals.galleries.isEmpty {
+            button(.commonUpgradeToOriginals, systemImage: "photo.badge.arrow.down", job: originals, identifier: "upgradeOriginalsButton") {
+                model.downloads.startBatch(.originals, galleries: originals.galleries)
+            }
         }
     }
 
-    var body: some View {
-        HStack {
-            Label(title, systemImage: pagesMissing ? "exclamationmark.circle" : "photo.badge.exclamationmark")
-                .font(.footnote.weight(.medium))
-                .foregroundStyle(.orange)
-                .monospacedDigit()
-            Spacer()
-            Button(.commonResumeDownload, systemImage: "arrow.down.circle", action: resume)
-                .font(.footnote.weight(.semibold))
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .accessibilityIdentifier(pagesMissing ? "resumeDownloadButton" : "fetchCoverButton")
+    private func button(_ title: LocalizedStringResource, systemImage: String, job: Job, identifier: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.subheadline.weight(.semibold))
+                    Text(count(job))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+            } icon: {
+                Image(systemName: systemImage)
+                    .font(.title3)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
+        .buttonStyle(.bordered)
+        .buttonBorderShape(.roundedRectangle(radius: 14))
+        .tint(.moeAccent)
+        .accessibilityIdentifier(identifier)
+    }
+
+    /// 「3 部 · 25 頁」, or just the galleries when only covers are missing.
+    private func count(_ job: Job) -> String {
+        let galleries = String(localized: .downloadsGalleryCount(job.galleries.count))
+        return job.pages > 0 ? "\(galleries) · \(String(localized: .downloadsPageCount(job.pages)))" : galleries
+    }
+
+    private func running(_ batch: DownloadCenter.Batch) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(batch.work == .originals ? .downloadsUpgradingToOriginals(min(batch.done + 1, batch.total), batch.total) : .downloadsDownloadingMissingImages(min(batch.done + 1, batch.total), batch.total))
+                    .font(.subheadline.weight(.semibold))
+                    .monospacedDigit()
+                if let current = batch.current {
+                    Text(current.bestTitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                ProgressView(value: model.downloads.batchProgress)
+                    .tint(.moeAccent)
+            }
+            Button(.commonStop, systemImage: "stop.fill") {
+                model.downloads.stopBatch()
+            }
+            .labelStyle(.titleAndIcon)
+            .font(.footnote.weight(.semibold))
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .accessibilityIdentifier("stopBatchButton")
+        }
+        .padding(14)
+        .cardSurface()
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("batchProgress")
+    }
+}
+
+/// What a download still lacks, under its card: 「未完成 7/18」, 「缺少封面」 (3.x didn't save covers),
+/// 「原圖 3/18」 (pages that aren't the originals: online reading, 3.x, or originals the site refused).
+private struct GapsRow: View {
+    let gaps: DownloadGaps
+
+    private var text: String {
+        var parts: [LocalizedStringResource] = []
+        if gaps.isMissingPages { parts.append(.downloadsIncomplete(gaps.pagesOnDisk, gaps.pageCount)) }
+        if gaps.isMissingCover { parts.append(.downloadsMissingCover) }
+        if gaps.hasReducedPages { parts.append(.downloadsOriginals(gaps.originalPages, gaps.pagesOnDisk)) }
+        return parts.map { String(localized: $0) }.joined(separator: " · ")
+    }
+
+    private var symbol: String {
+        if gaps.isMissingPages { "exclamationmark.circle" } else if gaps.isMissingCover { "photo.badge.exclamationmark" } else { "square.resize.up" }
+    }
+
+    var body: some View {
+        Label(text, systemImage: symbol)
+            .font(.footnote.weight(.medium))
+            .foregroundStyle(gaps.isMissingImages ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary))
+            .monospacedDigit()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .accessibilityIdentifier("downloadGaps")
     }
 }

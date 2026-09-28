@@ -8,6 +8,12 @@ import Observation
 /// Files are named `{gid}-{page}` in the gallery folder, the same as 3.x, so pages already
 /// on disk are shown without touching the network. A full download also saves the cover
 /// (`cover`), which 3.x never did.
+///
+/// Online reading saves what the site shows (resampled and recompressed). A downloaded gallery
+/// saves the original files instead, where the site allows it. Replacing reduced pages already on
+/// disk with originals is separate work (`Work.originals`), since it spends the user's image limits.
+///
+/// Once the image limits run out, the site only shows a placeholder: that stops everything.
 @MainActor
 @Observable
 public final class GalleryDownloader {
@@ -33,6 +39,17 @@ public final class GalleryDownloader {
         case failed
     }
 
+    /// What a full download does.
+    public struct Work: OptionSet, Hashable, Sendable {
+        public let rawValue: Int
+        public init(rawValue: Int) { self.rawValue = rawValue }
+
+        /// Missing pages (as originals where the site allows it) and the cover.
+        public static let missing = Work(rawValue: 1 << 0)
+        /// Reduced pages on disk, replaced with originals.
+        public static let originals = Work(rawValue: 1 << 1)
+    }
+
     public enum CoverState: Equatable, Sendable {
         /// The disk hasn't been checked yet.
         case unknown
@@ -46,15 +63,32 @@ public final class GalleryDownloader {
     public private(set) var phase: Phase = .loading
     public private(set) var pageStates: [PageState]
     public private(set) var readyCount = 0
-    public private(set) var isDownloadingAll = false
+    /// What the running full download does; empty when none is running.
+    public private(set) var work: Work = []
+    public var isDownloadingAll: Bool { !work.isEmpty }
     /// Whether any page came from the network this session (a complete gallery found on disk doesn't count).
     public private(set) var didFetchPages = false
     public private(set) var coverState: CoverState = .unknown
+    /// Pages (0-based) on disk as the site's original file.
+    public private(set) var originalPages: Set<Int> = []
+    /// Reduced pages this full download still replaces with originals, including the ones it's replacing now.
+    public private(set) var pagesToReplace: Set<Int> = []
+    /// Bumped when a page's file is replaced while it stays readable, so readers decode it again.
+    public private(set) var pageRevisions: [Int: Int] = [:]
+    /// The site answered an original's link with something else during this download (usually: not logged
+    /// in). Missing pages carry on as the site shows them; replacing pages stops.
+    public private(set) var wereOriginalsRefused = false
+    /// The image limits ran out, which stopped everything.
+    public private(set) var didHitRateLimit = false
 
     public var pageCount: Int { pageStates.count }
-    public var progress: Double { pageCount == 0 ? 0 : Double(readyCount) / Double(pageCount) }
+    /// Pages a full download is done with: on disk, and no longer waiting to be replaced with the original.
+    public var completedCount: Int { readyCount - pagesToReplace.count }
+    public var progress: Double { pageCount == 0 ? 0 : Double(completedCount) / Double(pageCount) }
     /// Every page is on disk. This is what readers and progress care about.
     public var arePagesComplete: Bool { pageCount > 0 && readyCount == pageCount }
+    /// Every page is on disk as the original.
+    public var isOriginalQuality: Bool { pageCount > 0 && originalPages.count == pageCount }
     /// The cover is on disk, or there is none to save (old records without a thumbnail).
     public var hasCover: Bool { coverState == .ready || gallery.thumbURL == nil }
     /// Every page and the cover are on disk.
@@ -64,6 +98,8 @@ public final class GalleryDownloader {
 
     var readerCount = 0
     var onFinishedAll: (@MainActor () -> Void)?
+    /// Called once the image limits stopped this downloader, so other downloads stop too.
+    var onRateLimited: (@MainActor () -> Void)?
 
     private let service: any GalleryService
     private let library: LibraryStore
@@ -126,19 +162,69 @@ public final class GalleryDownloader {
         pump()
     }
 
-    /// "我要下載": keep going until every page and the cover are on disk, or nothing is left to try.
-    public func downloadAll() {
-        isDownloadingAll = true
+    /// A full download: keeps going until its `work` is done, or nothing is left to try.
+    /// - `.missing` (「繼續下載」): every missing page, saved as the original where the site allows it,
+    ///   and the cover.
+    /// - `.originals` (「升級成原圖」): reduced pages on disk (from online reading, 3.x, or a refused
+    ///   original) are replaced with originals. They stay readable meanwhile.
+    ///
+    /// 「我要下載」 does both. `asksForOriginals: false` skips originals for missing pages (they were
+    /// just refused for another gallery).
+    public func downloadAll(_ work: Work = [.missing, .originals], asksForOriginals: Bool = true) {
+        guard !work.isEmpty else { return }
+        self.work.formUnion(work)
+        wereOriginalsRefused = !asksForOriginals
+        didHitRateLimit = false
         start()
-        let missing = pageStates.indices.filter { !pageStates[$0].isReady && pageStates[$0] != .downloading }
-        for index in missing where pageStates[index] != .queued {
-            pageStates[index] = .queued
+        queueRemainingPages()
+        if work.contains(.missing) {
+            coverAttempts = 0
+            fetchCover()
         }
-        queue.append(contentsOf: missing.filter { !queue.contains($0) })
-        coverAttempts = 0
-        fetchCover()
         pump()
         settle()
+    }
+
+    private func queueRemainingPages() {
+        if work.contains(.missing) {
+            let missing = pageStates.indices.filter { !pageStates[$0].isReady && pageStates[$0] != .downloading }
+            for index in missing where pageStates[index] != .queued {
+                pageStates[index] = .queued
+            }
+            queue.append(contentsOf: missing.filter { !queue.contains($0) })
+        }
+        queueReplacements(pageStates.indices.filter { pageStates[$0].isReady })
+    }
+
+    /// Queues pages on disk that aren't originals to be replaced, when this download does that.
+    /// They go after the missing pages.
+    private func queueReplacements(_ indices: [Int]) {
+        guard work.contains(.originals), !wereOriginalsRefused else { return }
+        let reduced = indices.filter { pageStates[$0].isReady && !originalPages.contains($0) && !pagesToReplace.contains($0) }
+        for index in reduced { retries[index] = nil }
+        pagesToReplace.formUnion(reduced)
+        queue.append(contentsOf: reduced.filter { !queue.contains($0) })
+    }
+
+    /// The site won't hand out originals right now: stop asking until the next full download.
+    private func refuseOriginals() {
+        wereOriginalsRefused = true
+        let waiting = pagesToReplace.filter { downloadTasks[$0] == nil }
+        pagesToReplace.subtract(waiting)
+        queue.removeAll { waiting.contains($0) }
+    }
+
+    /// Downloaded galleries keep originals; online reading keeps what the site shows.
+    private var savesOriginals: Bool {
+        !wereOriginalsRefused && (isDownloadingAll || library.isDownloaded(gallery))
+    }
+
+    /// The site only shows its image-limits placeholder now: stop everything, and let the others know.
+    private func hitRateLimit() {
+        guard !didHitRateLimit else { return }
+        stop()
+        didHitRateLimit = true
+        onRateLimited?()
     }
 
     /// Saves the cover next to the pages, unless it's already there.
@@ -155,7 +241,7 @@ public final class GalleryDownloader {
             } else {
                 self.coverState = .failed
                 self.coverAttempts += 1
-                if self.isDownloadingAll, self.coverAttempts < 3 {
+                if self.work.contains(.missing), self.coverAttempts < 3 {
                     self.fetchCover()
                     return
                 }
@@ -166,8 +252,9 @@ public final class GalleryDownloader {
 
     /// Stops all work (reader closed without a full download, or gallery deleted).
     public func stop() {
-        isDownloadingAll = false
+        work = []
         queue.removeAll()
+        pagesToReplace.removeAll()
         startTask?.cancel()
         coverTask?.cancel()
         coverTask = nil
@@ -183,9 +270,11 @@ public final class GalleryDownloader {
 
     /// 「重新載入這頁」: throws the file away and downloads the page again.
     public func reload(page index: Int) {
-        guard pageStates.indices.contains(index), pageStates[index] != .downloading else { return }
+        guard pageStates.indices.contains(index), pageStates[index] != .downloading, downloadTasks[index] == nil else { return }
         try? FileManager.default.removeItem(at: fileURL(forPage: index))
         if pageStates[index].isReady { readyCount -= 1 }
+        originalPages.remove(index)
+        pagesToReplace.remove(index)
         pageStates[index] = .idle
         retries[index] = nil
         request([index])
@@ -205,14 +294,18 @@ public final class GalleryDownloader {
     private func performStart() async {
         // 1. Whatever is already on disk is readable immediately (also offline).
         let folder = folder, files = files, gid = gallery.gid, count = pageCount
-        let (sizes, coverOnDisk) = await Task.detached(priority: .userInitiated) { () -> ([Int: CGSize], Bool) in
+        let (sizes, originals, coverOnDisk) = await Task.detached(priority: .userInitiated) { () -> ([Int: CGSize], Set<Int>, Bool) in
             var sizes: [Int: CGSize] = [:]
+            var originals: Set<Int> = []
             for index in 0..<count {
-                let url = files.fileURL(folder: folder, fileName: "\(gid)-\(index + 1)")
-                if let size = GalleryFileStore.pixelSize(ofImageAt: url) { sizes[index] = size }
+                let fileName = "\(gid)-\(index + 1)"
+                if let size = GalleryFileStore.pixelSize(ofImageAt: files.fileURL(folder: folder, fileName: fileName)) {
+                    sizes[index] = size
+                    if files.isMarkedOriginal(folder: folder, fileName: fileName) { originals.insert(index) }
+                }
             }
             let coverOnDisk = GalleryFileStore.pixelSize(ofImageAt: files.coverURL(folder: folder)) != nil
-            return (sizes, coverOnDisk)
+            return (sizes, originals, coverOnDisk)
         }.value
         guard !Task.isCancelled else { return }
         if coverOnDisk {
@@ -223,7 +316,10 @@ public final class GalleryDownloader {
         for (index, size) in sizes where pageStates.indices.contains(index) && !pageStates[index].isReady {
             pageStates[index] = .ready(size)
             readyCount += 1
+            if originals.contains(index) { originalPages.insert(index) }
         }
+        // A full download that started before the disk was checked replaces what turned up.
+        queueReplacements(sizes.keys.sorted())
 
         // 2. First link page tells us the gallery exists and how many links each page holds.
         let outcome = await loadLinkPage(0)
@@ -298,7 +394,10 @@ public final class GalleryDownloader {
         guard count > pageStates.count else { return }
         pageStates += Array(repeating: .idle, count: count - pageStates.count)
         links += Array(repeating: nil, count: count - links.count)
-        if isDownloadingAll { downloadAll() }
+        if isDownloadingAll {
+            queueRemainingPages()
+            pump()
+        }
     }
 
     private func linkPage(forPage index: Int) -> Int? {
@@ -313,17 +412,21 @@ public final class GalleryDownloader {
         var index = 0
         while downloadTasks.count < maxConcurrentDownloads, index < queue.count {
             let page = queue[index]
-            guard pageStates.indices.contains(page), pageStates[page] == .queued else {
+            guard isWaiting(page) else {
                 queue.remove(at: index)
                 continue
             }
             if let link = links[page] {
                 queue.remove(at: index)
-                startDownload(page, link: link)
+                if pageStates[page].isReady {
+                    startReplacement(page, link: link)
+                } else {
+                    startDownload(page, link: link)
+                }
             } else if let linkPage = linkPage(forPage: page) {
                 if loadedLinkPages.contains(linkPage) {
                     // The site lists fewer pages than the gallery claims.
-                    pageStates[page] = .failed
+                    giveUp(page)
                     queue.remove(at: index)
                     continue
                 }
@@ -353,37 +456,68 @@ public final class GalleryDownloader {
         }
     }
 
+    /// A queued page still to download, or a reduced page still to replace.
+    private func isWaiting(_ page: Int) -> Bool {
+        guard pageStates.indices.contains(page), downloadTasks[page] == nil else { return false }
+        return pageStates[page] == .queued || (pageStates[page].isReady && pagesToReplace.contains(page))
+    }
+
+    /// Nothing more to try for a queued page (it fails) or a page to replace (it stays reduced).
+    private func giveUp(_ page: Int) {
+        if pageStates[page] == .queued {
+            pageStates[page] = .failed
+        } else {
+            pagesToReplace.remove(page)
+        }
+    }
+
     private func failQueuedPages() {
-        for index in queue where pageStates.indices.contains(index) && pageStates[index] == .queued {
-            pageStates[index] = .failed
+        for index in queue where isWaiting(index) {
+            giveUp(index)
         }
         queue.removeAll()
     }
 
     private func failPages(onLinkPage linkPage: Int) {
         guard let perPage = linksPerPage else { return }
-        for index in (linkPage * perPage)..<min((linkPage + 1) * perPage, pageCount) where links[index] == nil && pageStates[index] == .queued {
-            pageStates[index] = .failed
+        for index in (linkPage * perPage)..<min((linkPage + 1) * perPage, pageCount) where links[index] == nil && isWaiting(index) {
+            giveUp(index)
         }
-        queue.removeAll { pageStates.indices.contains($0) && pageStates[$0] == .failed }
+        queue.removeAll { !isWaiting($0) }
     }
 
     private func startDownload(_ index: Int, link: String) {
         pageStates[index] = .downloading
-        let service = service, files = files, folder = folder, fileName = fileName(forPage: index)
+        let service = service, files = files, folder = folder, fileName = fileName(forPage: index), wantsOriginal = savesOriginals
         downloadTasks[index] = Task {
-            let size = await Self.fetchImage(link: link, service: service, files: files, folder: folder, fileName: fileName)
+            let outcome = await Self.fetchPage(link: link, wantsOriginal: wantsOriginal, service: service, files: files, folder: folder, fileName: fileName)
             guard !Task.isCancelled else { return }
             self.downloadTasks[index] = nil
-            if let size {
+            if case .rateLimited = outcome {
+                self.pageStates[index] = .failed
+                self.hitRateLimit()
+                return
+            }
+            if case .saved(let fetched) = outcome {
                 self.didFetchPages = true
                 if !self.pageStates[index].isReady { self.readyCount += 1 }
-                self.pageStates[index] = .ready(size)
+                self.pageStates[index] = .ready(fetched.size)
+                if fetched.isOriginal {
+                    self.originalPages.insert(index)
+                } else {
+                    self.originalPages.remove(index)
+                }
+                if fetched.wasOriginalRefused {
+                    self.refuseOriginals()
+                } else if !fetched.isOriginal, !fetched.askedForOriginal {
+                    // Fetched for reading just before 「我要下載」.
+                    self.queueReplacements([index])
+                }
             } else {
                 self.pageStates[index] = .failed
                 let attempts = self.retries[index, default: 0] + 1
                 self.retries[index] = attempts
-                if self.isDownloadingAll, attempts < 3 {
+                if self.work.contains(.missing), attempts < 3 {
                     self.pageStates[index] = .queued
                     self.queue.append(index)
                 }
@@ -393,16 +527,135 @@ public final class GalleryDownloader {
         }
     }
 
+    private func startReplacement(_ index: Int, link: String) {
+        let service = service, files = files, folder = folder, fileName = fileName(forPage: index)
+        downloadTasks[index] = Task {
+            let outcome = await Self.replaceWithOriginal(link: link, service: service, files: files, folder: folder, fileName: fileName)
+            guard !Task.isCancelled else { return }
+            self.downloadTasks[index] = nil
+            switch outcome {
+            case .original(let size, let replaced):
+                self.originalPages.insert(index)
+                self.pagesToReplace.remove(index)
+                if replaced {
+                    self.didFetchPages = true
+                    self.pageStates[index] = .ready(size)
+                    self.pageRevisions[index, default: 0] += 1
+                }
+            case .refused:
+                self.pagesToReplace.remove(index)
+                self.refuseOriginals()
+            case .rateLimited:
+                self.hitRateLimit()
+                return
+            case .failed:
+                let attempts = self.retries[index, default: 0] + 1
+                self.retries[index] = attempts
+                if self.work.contains(.originals), attempts < 3 {
+                    self.queue.append(index)
+                } else {
+                    self.pagesToReplace.remove(index)
+                }
+            }
+            self.pump()
+            self.settle()
+        }
+    }
+
+    private struct FetchedPage: Sendable {
+        var size: CGSize
+        /// The saved file is the original: fetched as such, or the page shows the original itself.
+        var isOriginal: Bool
+        /// The original was asked for: this is the best this download gets, even if the fetch fell back.
+        var askedForOriginal: Bool
+        /// The site answered the original's link with something else.
+        var wasOriginalRefused: Bool
+    }
+
+    private enum PageFetch: Sendable {
+        case saved(FetchedPage)
+        case failed
+        case rateLimited
+    }
+
+    /// Downloads a missing page: the original when `wantsOriginal` and the site hands it out,
+    /// otherwise (or when that fails) what the page shows, so the page is readable either way.
     @concurrent
-    private static func fetchImage(link: String, service: any GalleryService, files: GalleryFileStore, folder: String, fileName: String) async -> CGSize? {
+    private static func fetchPage(link: String, wantsOriginal: Bool, service: any GalleryService, files: GalleryFileStore, folder: String, fileName: String) async -> PageFetch {
+        let imageKey = ImagePage(link)?.imageKey ?? ""
         do {
-            let url = try await service.imageURL(forImagePage: link)
-            let data = try await service.imageData(from: url)
-            guard let size = GalleryFileStore.pixelSize(ofImageData: data) else { return nil }
-            try files.write(data, folder: folder, fileName: fileName)
-            return size
+            let source = try await service.imageSource(forImagePage: link)
+            var wasRefused = false
+            if wantsOriginal, let originalURL = source.originalURL {
+                do {
+                    let data = try await service.imageData(from: originalURL)
+                    if GalleryFileStore.isOriginal(data, imageKey: imageKey), let size = GalleryFileStore.pixelSize(ofImageData: data) {
+                        try files.write(data, folder: folder, fileName: fileName, isOriginal: true)
+                        return .saved(FetchedPage(size: size, isOriginal: true, askedForOriginal: true, wasOriginalRefused: false))
+                    }
+                    // Something that isn't the file.
+                    wasRefused = true
+                } catch SiteError.rateLimited {
+                    return .rateLimited
+                } catch SiteError.network {
+                    // Network trouble: fall back to what the page shows.
+                } catch {
+                    // A login bounce or some other page instead of the file.
+                    wasRefused = true
+                }
+            }
+            let data = try await service.imageData(from: source.url)
+            guard let size = GalleryFileStore.pixelSize(ofImageData: data) else { return .failed }
+            let isOriginal = GalleryFileStore.isOriginal(data, imageKey: imageKey)
+            try files.write(data, folder: folder, fileName: fileName, isOriginal: isOriginal)
+            return .saved(FetchedPage(size: size, isOriginal: isOriginal, askedForOriginal: wantsOriginal && source.originalURL != nil, wasOriginalRefused: wasRefused))
+        } catch SiteError.rateLimited {
+            return .rateLimited
         } catch {
-            return nil
+            return .failed
+        }
+    }
+
+    private enum Replacement: Sendable {
+        /// The file is the original now: it already was, or it was just `replaced`.
+        case original(CGSize, replaced: Bool)
+        /// The site answered the original's link with something else (usually: not logged in).
+        case refused
+        case rateLimited
+        case failed
+    }
+
+    /// Replaces a reduced page on disk with the original. The reduced file stays until the original is in hand.
+    @concurrent
+    private static func replaceWithOriginal(link: String, service: any GalleryService, files: GalleryFileStore, folder: String, fileName: String) async -> Replacement {
+        guard let imageKey = ImagePage(link)?.imageKey else { return .failed }
+        // Pages the site never resampled were saved as originals all along (by 3.x too); they only need the mark.
+        if files.verifyOriginal(folder: folder, fileName: fileName, imageKey: imageKey),
+           let size = GalleryFileStore.pixelSize(ofImageAt: files.fileURL(folder: folder, fileName: fileName)) {
+            return .original(size, replaced: false)
+        }
+        let source: PageImageSource
+        do {
+            source = try await service.imageSource(forImagePage: link)
+        } catch {
+            return error == .rateLimited ? .rateLimited : .failed
+        }
+        // Without an original link, what the page shows is the original.
+        let hasOriginalLink = source.originalURL != nil
+        do {
+            let data = try await service.imageData(from: source.originalURL ?? source.url)
+            guard GalleryFileStore.isOriginal(data, imageKey: imageKey), let size = GalleryFileStore.pixelSize(ofImageData: data) else {
+                return hasOriginalLink ? .refused : .failed
+            }
+            try files.write(data, folder: folder, fileName: fileName, isOriginal: true)
+            return .original(size, replaced: true)
+        } catch SiteError.rateLimited {
+            return .rateLimited
+        } catch SiteError.network {
+            return .failed
+        } catch {
+            // A login bounce or some other page instead of the original.
+            return hasOriginalLink ? .refused : .failed
         }
     }
 
@@ -419,13 +672,15 @@ public final class GalleryDownloader {
         }
     }
 
-    /// Ends a full download once everything is on disk, or once nothing is left to try
-    /// (pages or the cover failed after their retries). 「繼續下載」 picks it up again later.
+    /// Ends a full download once its work is done (every page and the cover on disk, reduced pages
+    /// replaced), or once nothing is left to try (pages or the cover failed after their retries, or
+    /// originals were refused). The Downloads tab's buttons pick it up again later.
     private func settle() {
         guard isDownloadingAll, phase != .loading else { return }
         let isIdle = queue.isEmpty && downloadTasks.isEmpty && linkTasks.isEmpty && coverTask == nil
-        guard isComplete || isIdle else { return }
-        isDownloadingAll = false
+        let isDone = (!work.contains(.missing) || isComplete) && pagesToReplace.isEmpty
+        guard isDone || isIdle else { return }
+        work = []
         onFinishedAll?()
     }
 

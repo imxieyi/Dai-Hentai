@@ -36,6 +36,8 @@ struct GalleryContextMenu: View {
     var body: some View {
         let isDownloaded = model.library.isDownloaded(gallery)
         let isDownloading = model.downloads.isDownloading(gallery.id)
+        // The Downloads tab's two jobs, for this gallery alone, when there's something for them to do.
+        let gaps = isDownloaded && !isDownloading ? model.library.downloadGaps(gallery) : nil
         Button(.commonReadNow, systemImage: "book") {
             model.router.openReader(gallery)
         }
@@ -43,12 +45,19 @@ struct GalleryContextMenu: View {
             Button(.commonWantDownload, systemImage: "arrow.down.circle") {
                 model.download(gallery)
             }
-        } else if !isDownloading, model.library.isMissingFiles(gallery) {
-            // Same as the Downloads tab's 「繼續下載」: only when pages or the cover are missing.
-            Button(.commonResumeDownload, systemImage: "arrow.down.circle") {
-                model.downloads.resume(gallery)
+        } else if let gaps {
+            if gaps.isMissingImages {
+                Button(.commonResumeDownload, systemImage: "arrow.down.circle") {
+                    model.downloads.resume(gallery, .missing)
+                }
+                .accessibilityIdentifier("menuResumeDownload")
             }
-            .accessibilityIdentifier("menuResumeDownload")
+            if gaps.hasReducedPages {
+                Button(.commonUpgradeToOriginals, systemImage: "photo.badge.arrow.down") {
+                    model.downloads.resume(gallery, .originals)
+                }
+                .accessibilityIdentifier("menuUpgradeToOriginals")
+            }
         }
         Button(.commonSearchRelated, systemImage: "text.magnifyingglass") {
             model.router.galleryCard = GalleryCardRoute(gallery: gallery, relatedWord: "")

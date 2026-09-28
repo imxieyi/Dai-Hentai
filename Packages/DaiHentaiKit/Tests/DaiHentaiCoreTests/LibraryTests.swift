@@ -1,6 +1,7 @@
 import Foundation
 import SQLite3
 import SwiftData
+import Synchronization
 import Testing
 import UIKit
 @testable import DaiHentaiCore
@@ -179,6 +180,256 @@ struct LegacyDatabaseBuilder {
         #expect(library.files.fileExists(folder: gallery.folderName, fileName: GalleryFileStore.coverFileName))
         #expect(center.downloaders[gallery.id] == nil) // released once finished with no reader attached
         #expect(center.lastFinished == gallery)
+        // Every page is the original file: bigger than what the site shows, and marked as such.
+        #expect(downloader.isOriginalQuality)
+        #expect(downloader.pixelSize(ofPage: 0) == FixtureArt.originalSize(1))
+        #expect(downloader.pixelSize(ofPage: 4) == CGSize(width: 1000, height: 1414)) // shown as the original
+        #expect(library.downloadGaps(gallery).isEmpty)
+        let data = try Data(contentsOf: downloader.fileURL(forPage: 0))
+        #expect(GalleryFileStore.isOriginal(data, imageKey: FixtureArt.imageKey(gid: gallery.gid, page: 1)))
+    }
+
+    @Test func readingOnlineKeepsWhatTheSiteShows() async throws {
+        let library = try makeLibrary()
+        let gallery = FixtureGalleryService.galleries[6]
+        let downloader = GalleryDownloader(gallery: gallery, service: FixtureGalleryService(latency: .milliseconds(5)), library: library)
+        await downloader.waitUntilStarted()
+        downloader.request([0, 4])
+        for _ in 0..<200 where !(downloader.pageStates[0].isReady && downloader.pageStates[4].isReady) {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(downloader.pixelSize(ofPage: 0) == CGSize(width: 1000, height: 1414))
+        #expect(downloader.originalPages == [4]) // page 5 isn't resampled, so what it shows is the original
+        #expect(!library.files.isMarkedOriginal(folder: gallery.folderName, fileName: "\(gallery.gid)-1"))
+        #expect(library.files.isMarkedOriginal(folder: gallery.folderName, fileName: "\(gallery.gid)-5"))
+        downloader.stop()
+    }
+
+    @Test func resumingReplacesReducedPagesWithOriginals() async throws {
+        let library = try makeLibrary()
+        let gallery = FixtureGalleryService.galleries[6]
+        try writeReducedPages(of: gallery, to: library)
+        try library.files.write(Data([1]), folder: gallery.folderName, fileName: GalleryFileStore.coverFileName)
+        library.markDownloaded(gallery) // a 3.x download: every page, as the site showed it
+        #expect(library.downloadGaps(gallery).hasReducedPages)
+        #expect(!library.downloadGaps(gallery).isMissingImages)
+        let center = DownloadCenter(library: library) { FixtureGalleryService(latency: .milliseconds(5)) }
+
+        center.resume(gallery, .originals)
+        let downloader = try #require(center.downloaders[gallery.id])
+        await downloader.waitUntilStarted()
+        #expect(downloader.isDownloadingAll) // doesn't end just because every page is on disk
+        #expect(downloader.progress < 1)
+        for _ in 0..<400 where downloader.isDownloadingAll {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(downloader.isOriginalQuality)
+        #expect(downloader.pixelSize(ofPage: 0) == FixtureArt.originalSize(1))
+        #expect(downloader.pageRevisions[0] == 1)   // readers decode the new file
+        #expect(downloader.pageRevisions[4] == nil) // page 5 was the original all along: only marked
+        #expect(library.downloadGaps(gallery).isEmpty)
+        #expect(center.lastFinished == gallery)
+    }
+
+    @Test func resumingFromTheReaderLeavesReducedPagesAlone() async throws {
+        let library = try makeLibrary()
+        let gallery = FixtureGalleryService.galleries[6]
+        try writeReducedPages(of: gallery, to: library, count: gallery.fileCount - 1)
+        library.markDownloaded(gallery)
+        let center = DownloadCenter(library: library) { FixtureGalleryService(latency: .milliseconds(5)) }
+
+        let downloader = center.attachReader(to: gallery)
+        for _ in 0..<400 where !(downloader.arePagesComplete && !downloader.isDownloadingAll) {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(downloader.arePagesComplete)
+        #expect(downloader.originalPages == [gallery.fileCount - 1]) // only the missing page, fetched as the original
+        #expect(downloader.pageRevisions.isEmpty)
+        let gaps = library.downloadGaps(gallery)
+        #expect(!gaps.isMissingImages && gaps.hasReducedPages)       // 「升級成原圖」 is up to the user
+        center.detachReader(from: gallery)
+    }
+
+    @Test func downloadingMissingImagesLeavesReducedPagesAlone() async throws {
+        let library = try makeLibrary()
+        let gallery = FixtureGalleryService.galleries[6]
+        try writeReducedPages(of: gallery, to: library, count: gallery.fileCount - 1)
+        library.markDownloaded(gallery)
+        let center = DownloadCenter(library: library) { FixtureGalleryService(latency: .milliseconds(5)) }
+
+        center.resume(gallery, .missing)
+        let downloader = try #require(center.downloaders[gallery.id])
+        for _ in 0..<400 where downloader.isDownloadingAll {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(downloader.isComplete)
+        #expect(downloader.originalPages == [gallery.fileCount - 1])
+        #expect(downloader.pageRevisions.isEmpty)
+        let gaps = library.downloadGaps(gallery)
+        #expect(!gaps.isMissingImages)
+        #expect(gaps.reducedPageCount == gallery.fileCount - 1)
+    }
+
+    @Test func upgradingLeavesMissingPagesAndTheCoverAlone() async throws {
+        let library = try makeLibrary()
+        let gallery = FixtureGalleryService.galleries[6]
+        try writeReducedPages(of: gallery, to: library, count: gallery.fileCount - 1)
+        library.markDownloaded(gallery)
+        let center = DownloadCenter(library: library) { FixtureGalleryService(latency: .milliseconds(5)) }
+
+        center.resume(gallery, .originals)
+        let downloader = try #require(center.downloaders[gallery.id])
+        await downloader.waitUntilStarted()
+        #expect(downloader.isDownloadingAll)
+        for _ in 0..<400 where downloader.isDownloadingAll {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(downloader.readyCount == gallery.fileCount - 1)
+        #expect(downloader.originalPages.count == gallery.fileCount - 1)
+        #expect(downloader.coverState == .missing)
+        let gaps = library.downloadGaps(gallery)
+        #expect(gaps.isMissingPages && gaps.isMissingCover && !gaps.hasReducedPages)
+    }
+
+    @Test func refusedOriginalsFallBackAndStopBeingAskedFor() async throws {
+        let library = try makeLibrary()
+        let gallery = FixtureGalleryService.galleries[6]
+        let requests = RequestLog()
+        let center = DownloadCenter(library: library) { FlakyService(refusesOriginals: true, log: requests) }
+
+        center.startDownload(gallery)
+        let downloader = try #require(center.downloaders[gallery.id])
+        for _ in 0..<400 where downloader.isDownloadingAll {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(downloader.arePagesComplete)          // still readable offline
+        #expect(downloader.originalPages == [4])      // only the page shown as the original
+        #expect(downloader.wereOriginalsRefused)
+        #expect(requests.originals <= 3)              // the ones already on their way, not one per page
+        #expect(center.lastNotice?.kind == .finishedWithoutOriginals(gallery))
+        #expect(center.lastFinished == nil)
+
+        // 「升級成原圖」 while still refused: one try, then it stops.
+        let before = requests.originals
+        center.resume(gallery, .originals)
+        let again = try #require(center.downloaders[gallery.id])
+        for _ in 0..<400 where again.isDownloadingAll {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(requests.originals - before <= 3)
+        #expect(center.lastNotice?.kind == .originalsRefused)
+        #expect(library.downloadGaps(gallery).hasReducedPages)
+    }
+
+    @Test func theRateLimitStopsEveryDownload() async throws {
+        let library = try makeLibrary()
+        let first = FixtureGalleryService.galleries[6], second = FixtureGalleryService.galleries[22]
+        let center = DownloadCenter(library: library) { FlakyService(rateLimitAfter: 5) }
+
+        center.startDownload(first)
+        center.startDownload(second)
+        let downloaders = try [first, second].map { try #require(center.downloaders[$0.id]) }
+        for _ in 0..<400 where downloaders.contains(where: \.isDownloadingAll) {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(downloaders.allSatisfy { !$0.isDownloadingAll })
+        #expect(downloaders.contains { $0.didHitRateLimit })
+        #expect(downloaders.reduce(0) { $0 + $1.readyCount } <= 5)
+        #expect(center.downloaders.isEmpty) // no reader: nothing keeps the screen awake
+        #expect(center.lastNotice?.kind == .rateLimited)
+        #expect(center.lastFinished == nil)
+        // Nothing but real pages on disk: the placeholder isn't saved.
+        for (gallery, downloader) in zip([first, second], downloaders) {
+            #expect(library.files.contents(ofFolder: gallery.folderName, gid: gallery.gid).pages == downloader.readyCount)
+        }
+    }
+
+    @Test func aBatchWorksThroughGalleriesOneAtATime() async throws {
+        let library = try makeLibrary()
+        let galleries = [FixtureGalleryService.galleries[6], FixtureGalleryService.galleries[22]]
+        for gallery in galleries {
+            try writeReducedPages(of: gallery, to: library)
+            library.markDownloaded(gallery)
+        }
+        let center = DownloadCenter(library: library) { FixtureGalleryService(latency: .milliseconds(5)) }
+
+        center.startBatch(.originals, galleries: galleries)
+        #expect(center.batch?.current == galleries[0])
+        #expect(center.downloaders[galleries[1].id] == nil)
+        var sawSecond = false
+        for _ in 0..<600 where center.batch != nil {
+            if center.batch?.current == galleries[1] {
+                sawSecond = true
+                #expect(center.downloaders[galleries[0].id] == nil)
+            }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(sawSecond)
+        #expect(center.batch == nil)
+        for gallery in galleries {
+            #expect(library.downloadGaps(gallery).originalPages == gallery.fileCount)
+            #expect(library.downloadGaps(gallery).isMissingCover) // an upgrade doesn't fetch covers
+        }
+        #expect(center.lastNotice?.kind == .batchFinished(.originals, originalsRefused: false))
+        #expect(center.lastFinished == nil) // one toast for the batch, not one per gallery
+    }
+
+    @Test func aBatchStopsAtTheRateLimit() async throws {
+        let library = try makeLibrary()
+        let galleries = [FixtureGalleryService.galleries[6], FixtureGalleryService.galleries[22]]
+        galleries.forEach(library.markDownloaded)
+        let center = DownloadCenter(library: library) { FlakyService(rateLimitAfter: 4) }
+
+        center.startBatch(.missing, galleries: galleries)
+        for _ in 0..<400 where center.batch != nil {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(center.batch == nil)
+        #expect(center.lastNotice?.kind == .rateLimited)
+        #expect(library.files.contents(ofFolder: galleries[1].folderName, gid: galleries[1].gid).pages == 0) // never started
+    }
+
+    @Test func refusedOriginalsEndAnUpgradeBatch() async throws {
+        let library = try makeLibrary()
+        let galleries = [FixtureGalleryService.galleries[6], FixtureGalleryService.galleries[22]]
+        for gallery in galleries {
+            try writeReducedPages(of: gallery, to: library)
+            library.markDownloaded(gallery)
+        }
+        let requests = RequestLog()
+        let center = DownloadCenter(library: library) { FlakyService(refusesOriginals: true, log: requests) }
+
+        center.startBatch(.originals, galleries: galleries)
+        for _ in 0..<400 where center.batch != nil {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(center.lastNotice?.kind == .originalsRefused)
+        #expect(requests.originals <= 3)
+    }
+
+    @Test func aMissingImagesBatchStopsAskingForRefusedOriginals() async throws {
+        let library = try makeLibrary()
+        let galleries = [FixtureGalleryService.galleries[6], FixtureGalleryService.galleries[22]]
+        galleries.forEach(library.markDownloaded)
+        let requests = RequestLog()
+        let center = DownloadCenter(library: library) { FlakyService(refusesOriginals: true, log: requests) }
+
+        center.startBatch(.missing, galleries: galleries)
+        for _ in 0..<600 where center.batch != nil {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        for gallery in galleries {
+            #expect(!library.downloadGaps(gallery).isMissingImages) // still downloaded, as the site shows them
+        }
+        #expect(requests.originals <= 3) // the second gallery doesn't ask at all
+        #expect(center.lastNotice?.kind == .batchFinished(.missing, originalsRefused: true))
+    }
+
+
+    private func writeReducedPages(of gallery: GalleryInfo, to library: LibraryStore, count: Int? = nil) throws {
+        for page in 1...(count ?? gallery.fileCount) {
+            try library.files.write(FixtureArt.page(gid: gallery.gid, page: page), folder: gallery.folderName, fileName: "\(gallery.gid)-\(page)")
+        }
     }
 
     @Test func aMissingCoverIsFetchedQuietlyWhenReading() async throws {
@@ -204,31 +455,58 @@ struct LegacyDatabaseBuilder {
         center.detachReader(from: gallery)
     }
 
-    @Test func onlyAnIncompleteDownloadIsMissingFiles() throws {
+    @Test func downloadGapsCoverPagesCoverAndOriginals() throws {
         let library = try makeLibrary()
         let gallery = FixtureGalleryService.galleries[6]
         library.markDownloaded(gallery)
-        #expect(library.isMissingFiles(gallery))
+        #expect(library.downloadGaps(gallery).isMissingPages)
+        #expect(library.downloadGaps(gallery).missingPageCount == gallery.fileCount)
 
-        for page in 1...gallery.fileCount {
-            try library.files.write(FixtureArt.page(gid: gallery.gid, page: page), folder: gallery.folderName, fileName: "\(gallery.gid)-\(page)")
-        }
-        #expect(library.isMissingFiles(gallery), "the cover is still missing")
+        try writeReducedPages(of: gallery, to: library)
+        var gaps = library.downloadGaps(gallery)
+        #expect(!gaps.isMissingPages)
+        #expect(gaps.isMissingCover && gaps.isMissingImages)
+        #expect(gaps.reducedPageCount == gallery.fileCount)
 
         try library.files.write(Data([1]), folder: gallery.folderName, fileName: GalleryFileStore.coverFileName)
-        #expect(!library.isMissingFiles(gallery))
+        gaps = library.downloadGaps(gallery)
+        #expect(!gaps.isMissingImages)
+        #expect(gaps.hasReducedPages, "the pages still aren't the originals")
+
+        try writeOriginalPages(of: gallery, to: library)
+        gaps = library.downloadGaps(gallery)
+        #expect(gaps.originalPages == gallery.fileCount)
+        #expect(gaps.isEmpty)
+    }
+
+    @Test func rewritingAPageDropsItsOriginalMark() throws {
+        let files = GalleryFileStore(root: URL.temporaryDirectory.appending(path: "files-\(UUID().uuidString)", directoryHint: .isDirectory))
+        let original = FixtureArt.original(gid: "1", page: 1)
+        #expect(GalleryFileStore.isOriginal(original, imageKey: FixtureArt.imageKey(gid: "1", page: 1)))
+        #expect(!GalleryFileStore.isOriginal(FixtureArt.page(gid: "1", page: 1), imageKey: FixtureArt.imageKey(gid: "1", page: 1)))
+
+        try files.write(original, folder: "a", fileName: "1-1", isOriginal: true)
+        #expect(files.isMarkedOriginal(folder: "a", fileName: "1-1"))
+        #expect(files.contents(ofFolder: "a", gid: "1") == GalleryFileStore.FolderContents(pages: 1, originals: 1, hasCover: false))
+
+        try files.write(FixtureArt.page(gid: "1", page: 1), folder: "a", fileName: "1-1")
+        #expect(!files.isMarkedOriginal(folder: "a", fileName: "1-1"))
+        #expect(files.contents(ofFolder: "a", gid: "1").originals == 0)
+        // An unmarked file is checked against its image key.
+        #expect(!files.verifyOriginal(folder: "a", fileName: "1-1", imageKey: FixtureArt.imageKey(gid: "1", page: 1)))
+        try files.write(original, folder: "a", fileName: "1-1")
+        #expect(files.verifyOriginal(folder: "a", fileName: "1-1", imageKey: FixtureArt.imageKey(gid: "1", page: 1)))
+        #expect(files.isMarkedOriginal(folder: "a", fileName: "1-1"))
     }
 
     @Test func resumingFetchesOnlyTheMissingCover() async throws {
         let library = try makeLibrary()
         let gallery = FixtureGalleryService.galleries[6]
-        for page in 1...gallery.fileCount {
-            try library.files.write(FixtureArt.page(gid: gallery.gid, page: page), folder: gallery.folderName, fileName: "\(gallery.gid)-\(page)")
-        }
+        try writeOriginalPages(of: gallery, to: library)
         library.markDownloaded(gallery)
         let center = DownloadCenter(library: library) { FixtureGalleryService(latency: .milliseconds(5)) }
 
-        center.resume(gallery)
+        center.resume(gallery, .missing)
         let downloader = try #require(center.downloaders[gallery.id])
         for _ in 0..<200 where downloader.isDownloadingAll {
             try await Task.sleep(for: .milliseconds(10))
@@ -304,6 +582,12 @@ struct LegacyDatabaseBuilder {
         return LibraryStore(container: try LibraryContainer.make(inMemory: true), files: GalleryFileStore(root: root))
     }
 
+    private func writeOriginalPages(of gallery: GalleryInfo, to library: LibraryStore) throws {
+        for page in 1...gallery.fileCount {
+            try library.files.write(FixtureArt.original(gid: gallery.gid, page: page), folder: gallery.folderName, fileName: "\(gallery.gid)-\(page)", isOriginal: true)
+        }
+    }
+
     @Test func pagesOnDiskAreReadyWithoutNetwork() async throws {
         let root = URL.temporaryDirectory.appending(path: "dl-\(UUID().uuidString)", directoryHint: .isDirectory)
         let library = LibraryStore(container: try LibraryContainer.make(inMemory: true), files: GalleryFileStore(root: root))
@@ -375,17 +659,39 @@ struct LegacyDatabaseBuilder {
     }
 }
 
+/// Counts image requests, shared by every copy of a `FlakyService`.
+final class RequestLog: Sendable {
+    private let counts = Mutex((images: 0, originals: 0))
+    var images: Int { counts.withLock { $0.images } }
+    var originals: Int { counts.withLock { $0.originals } }
+
+    /// Records a request for a page image and returns how many there have been.
+    func addImage(isOriginal: Bool) -> Int {
+        counts.withLock {
+            $0.images += 1
+            if isOriginal { $0.originals += 1 }
+            return $0.images
+        }
+    }
+}
+
 /// Fixture content with chosen requests failing.
 struct FlakyService: GalleryService {
     var failsLinks = false
     var failsCovers = false
     var failingPage: Int?
-    private let base = FixtureGalleryService(latency: .milliseconds(2))
+    /// Page images after this many come back as the image-limits placeholder.
+    var rateLimitAfter: Int?
+    let log: RequestLog
+    private let base: FixtureGalleryService
 
-    init(failsLinks: Bool = false, failsCovers: Bool = false, failingPage: Int? = nil) {
+    init(failsLinks: Bool = false, failsCovers: Bool = false, failingPage: Int? = nil, refusesOriginals: Bool = false, rateLimitAfter: Int? = nil, log: RequestLog = RequestLog()) {
         self.failsLinks = failsLinks
         self.failsCovers = failsCovers
         self.failingPage = failingPage
+        self.rateLimitAfter = rateLimitAfter
+        self.log = log
+        self.base = FixtureGalleryService(latency: .milliseconds(2), refusesOriginals: refusesOriginals)
     }
 
     var site: Site { base.site }
@@ -399,13 +705,17 @@ struct FlakyService: GalleryService {
         return try await base.imagePageLinks(gid: gid, token: token, index: index)
     }
 
-    @concurrent func imageURL(forImagePage pageURL: String) async throws(SiteError) -> URL {
-        try await base.imageURL(forImagePage: pageURL)
+    @concurrent func imageSource(forImagePage pageURL: String) async throws(SiteError) -> PageImageSource {
+        try await base.imageSource(forImagePage: pageURL)
     }
 
     @concurrent func imageData(from url: URL) async throws(SiteError) -> Data {
+        if url.host() == "img" || url.host() == "original" {
+            let count = log.addImage(isOriginal: url.host() == "original")
+            if let rateLimitAfter, count > rateLimitAfter { throw .rateLimited }
+        }
         if failsCovers, url.host() == "thumb" { throw .network }
-        if let failingPage, url.host() == "img", url.lastPathComponent == String(failingPage) { throw .network }
+        if let failingPage, url.host() == "img" || url.host() == "original", url.lastPathComponent == String(failingPage) { throw .network }
         return try await base.imageData(from: url)
     }
 
@@ -429,12 +739,12 @@ struct LiveSiteTests {
 
         let links = try await service.imagePageLinks(gid: first.gid, token: first.token, index: 0)
         #expect(!links.isEmpty)
-        let firstImage = try await service.imageURL(forImagePage: links[0])
-        #expect(firstImage.scheme?.hasPrefix("http") == true)
+        let firstImage = try await service.imageSource(forImagePage: links[0])
+        #expect(firstImage.url.scheme?.hasPrefix("http") == true)
         if links.count > 1 {
             // Second page goes through the showpage API with the cached show key.
-            let secondImage = try await service.imageURL(forImagePage: links[1])
-            #expect(secondImage != firstImage)
+            let secondImage = try await service.imageSource(forImagePage: links[1])
+            #expect(secondImage.url != firstImage.url)
         }
         let probe = await SiteDiagnostics.probe(service)
         #expect(probe == SiteProbeResult(list: .success, api: .success))

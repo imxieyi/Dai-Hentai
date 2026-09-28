@@ -32,6 +32,14 @@ final class SmokeUITests: XCTestCase {
         _ = XCTWaiter.wait(for: [XCTestExpectation(description: "pause")], timeout: seconds)
     }
 
+    /// Waits for 「下載缺少的圖片」 / 「升級成原圖」 to finish.
+    private func waitForBatch(timeout: TimeInterval = 40) -> Bool {
+        let gone = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: element("stopBatchButton"))
+        let done = XCTWaiter.wait(for: [gone], timeout: timeout) == .completed
+        pause(1)
+        return done
+    }
+
     /// Taps the dimmed backdrop under the status bar (which ignores taps), away from the card and its menu.
     private func dismissContextMenu() {
         app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.09)).tap()
@@ -201,31 +209,50 @@ final class SmokeUITests: XCTestCase {
         pause(2)
         snap("35-downloads")
 
-        // The seeded downloads came from "3.x": no covers. Fetching one is quiet: no toast, and the row goes away.
+        // Seeded: a complete download in original quality, one from 3.x (reduced pages) and one that stopped
+        // half way, none with a cover. The two jobs sit at the top, whatever the length of the list.
+        XCTAssertTrue(element("downloadMissingButton").exists)
+        XCTAssertTrue(element("upgradeOriginalsButton").exists)
         XCTAssertTrue(app.staticTexts["缺少封面"].exists)
-        // While something is missing, the context menu offers 繼續下載 too.
+        // A download's context menu offers only the jobs it needs.
         element("galleryCard").press(forDuration: 1.2)
         pause()
         XCTAssertTrue(element("menuResumeDownload").exists)
+        XCTAssertFalse(element("menuUpgradeToOriginals").exists)
         snap("35-downloads-incomplete-menu")
         dismissContextMenu()
-        element("fetchCoverButton").tap()
-        var sawToast = false
-        for _ in 0..<10 {
-            sawToast = sawToast || element("toast").exists
-            pause(0.2)
-        }
-        XCTAssertFalse(sawToast)
+        // The 3.x download needs both: its cover, and originals for its pages.
+        app.descendants(matching: .any).matching(identifier: "galleryCard").element(boundBy: 1).press(forDuration: 1.2)
+        pause()
+        XCTAssertTrue(element("menuResumeDownload").exists)
+        XCTAssertTrue(element("menuUpgradeToOriginals").exists)
+        snap("35-downloads-both-jobs-menu")
+        dismissContextMenu()
+
+        // 下載缺少的圖片: covers and missing pages, one download at a time, leaving reduced pages alone.
+        element("downloadMissingButton").tap()
+        XCTAssertTrue(element("stopBatchButton").waitForExistence(timeout: 3))
+        snap("35-downloads-missing-running")
+        XCTAssertTrue(waitForBatch())
+        XCTAssertFalse(element("downloadMissingButton").exists)
         XCTAssertFalse(app.staticTexts["缺少封面"].exists)
-        XCTAssertFalse(element("fetchCoverButton").exists)
-        snap("35-downloads-cover-fetched")
-        // A complete download has nothing to resume.
+        XCTAssertTrue(element("upgradeOriginalsButton").exists)
+        snap("35-downloads-missing-done")
+        // The complete download has nothing left to do.
         element("galleryCard").press(forDuration: 1.2)
         pause()
         XCTAssertTrue(app.buttons["我要現在看"].exists)
         XCTAssertFalse(element("menuResumeDownload").exists)
+        XCTAssertFalse(element("menuUpgradeToOriginals").exists)
         snap("35-downloads-complete-menu")
         dismissContextMenu()
+
+        // 升級成原圖 replaces the rest with originals.
+        element("upgradeOriginalsButton").tap()
+        XCTAssertTrue(waitForBatch())
+        XCTAssertFalse(element("upgradeOriginalsButton").exists)
+        XCTAssertFalse(element("downloadGaps").exists)
+        snap("35-downloads-upgraded")
         element("galleryCard").tap()
         pause(2.5)
         snap("36-reader-downloaded")

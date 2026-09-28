@@ -27,10 +27,17 @@ enum DemoSeeder {
             library.gallery(forKey: gallery.id)?.lastViewedAt = entry.viewedAt
         }
 
-        // One complete download and one that stopped half way.
+        // A complete download in original quality, one from 3.x (reduced pages), and one that stopped
+        // half way. None has its cover yet: 3.x never saved covers.
         let complete = galleries[6]   // 8 pages
+        let reduced = galleries[22]   // 8 pages
         let partial = galleries[3]    // 18 pages
-        for (gallery, pages, viewedAt) in [(complete, complete.fileCount, now.addingTimeInterval(-5 * hour)), (partial, 7, calendar.date(byAdding: .day, value: -2, to: now)!)] {
+        let downloads: [(gallery: GalleryInfo, pages: Int, originals: Bool, viewedAt: Date)] = [
+            (complete, complete.fileCount, true, now.addingTimeInterval(-5 * hour)),
+            (reduced, reduced.fileCount, false, calendar.date(byAdding: .day, value: -1, to: now)!.addingTimeInterval(-5 * hour)),
+            (partial, 7, false, calendar.date(byAdding: .day, value: -2, to: now)!),
+        ]
+        for (gallery, pages, originals, viewedAt) in downloads {
             library.recordVisit(gallery)
             library.markDownloaded(gallery)
             library.gallery(forKey: gallery.id)?.lastViewedAt = viewedAt
@@ -39,7 +46,8 @@ enum DemoSeeder {
             let gid = gallery.gid
             await Task.detached(priority: .userInitiated) {
                 for page in 1...pages {
-                    try? files.write(FixtureArt.page(gid: gid, page: page), folder: folder, fileName: "\(gid)-\(page)")
+                    let data = originals ? FixtureArt.original(gid: gid, page: page) : FixtureArt.page(gid: gid, page: page)
+                    try? files.write(data, folder: folder, fileName: "\(gid)-\(page)", isOriginal: originals)
                 }
             }.value
         }

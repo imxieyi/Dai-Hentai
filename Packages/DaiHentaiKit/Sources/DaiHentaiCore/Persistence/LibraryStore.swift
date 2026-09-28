@@ -80,11 +80,10 @@ public final class LibraryStore {
         gallery(forKey: info.id)?.isDownloaded ?? false
     }
 
-    /// Whether a downloaded gallery still lacks pages or its cover on disk (「繼續下載」 fetches them).
-    public func isMissingFiles(_ info: GalleryInfo) -> Bool {
+    /// What a downloaded gallery still lacks on disk (「下載缺少的圖片」 / 「升級成原圖」).
+    public func downloadGaps(_ info: GalleryInfo) -> DownloadGaps {
         let info = gallery(forKey: info.id)?.info ?? info
-        let contents = files.contents(ofFolder: info.folderName, gid: info.gid)
-        return contents.pages < info.fileCount || (!contents.hasCover && info.thumbURL != nil)
+        return DownloadGaps(info: info, contents: files.contents(ofFolder: info.folderName, gid: info.gid))
     }
 
     public func markDownloaded(_ info: GalleryInfo) {
@@ -185,6 +184,31 @@ public final class LibraryStore {
             assertionFailure("SwiftData save failed: \(error)")
         }
     }
+}
+
+/// How a downloaded gallery's folder falls short of the gallery.
+public struct DownloadGaps: Equatable, Sendable {
+    public var pageCount: Int
+    public var pagesOnDisk: Int
+    public var originalPages: Int
+    public var isMissingCover: Bool
+
+    public init(info: GalleryInfo, contents: GalleryFileStore.FolderContents) {
+        pageCount = info.fileCount
+        pagesOnDisk = contents.pages
+        originalPages = contents.originals
+        isMissingCover = !contents.hasCover && info.thumbURL != nil
+    }
+
+    public var isMissingPages: Bool { pageCount > 0 && pagesOnDisk < pageCount }
+    public var missingPageCount: Int { max(0, pageCount - pagesOnDisk) }
+    /// Pages or the cover are missing: 「下載缺少的圖片」 / 「繼續下載」 fetches them.
+    public var isMissingImages: Bool { isMissingPages || isMissingCover }
+    /// Pages on disk that aren't the originals (online reading, 3.x, or originals the site refused):
+    /// 「升級成原圖」 replaces them.
+    public var reducedPageCount: Int { max(0, pagesOnDisk - originalPages) }
+    public var hasReducedPages: Bool { reducedPageCount > 0 }
+    public var isEmpty: Bool { !isMissingImages && !hasReducedPages }
 }
 
 /// Storage used by history and downloads, computed off the main actor.

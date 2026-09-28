@@ -1,4 +1,5 @@
 import Foundation
+import Synchronization
 import UIKit
 
 /// Offline stand-in for the site, used by previews, `-DemoMode` and UI tests.
@@ -7,10 +8,13 @@ public struct FixtureGalleryService: GalleryService {
     public let site: Site
     /// Simulated latency per request.
     public var latency: Duration
+    /// Answers originals with a login page, like the site does for logged-out users.
+    public var refusesOriginals: Bool
 
-    public init(site: Site = .eHentai, latency: Duration = .milliseconds(120)) {
+    public init(site: Site = .eHentai, latency: Duration = .milliseconds(120), refusesOriginals: Bool = false) {
         self.site = site
         self.latency = latency
+        self.refusesOriginals = refusesOriginals
     }
 
     /// A gid the fixture treats as removed from the site.
@@ -99,12 +103,20 @@ public struct FixtureGalleryService: GalleryService {
         if gid == Self.missingGalleryID { throw .galleryNotFound }
         let count = Self.galleries.first { $0.gid == gid }?.fileCount ?? 20
         let pages = (index * Self.linksPerPage)..<min((index + 1) * Self.linksPerPage, count)
-        return pages.map { "fixture://s/k\($0)/\(gid)-\($0 + 1)" }
+        // Like the site's, image keys are the start of the original file's SHA-1.
+        let keys = await withTaskGroup(of: (Int, String).self) { group in
+            for page in pages {
+                group.addTask { (page, FixtureArt.imageKey(gid: gid, page: page + 1)) }
+            }
+            return await group.reduce(into: [Int: String]()) { $0[$1.0] = $1.1 }
+        }
+        return pages.map { "fixture://s/\(keys[$0] ?? "")/\(gid)-\($0 + 1)" }
     }
 
-    @concurrent public func imageURL(forImagePage pageURL: String) async throws(SiteError) -> URL {
+    @concurrent public func imageSource(forImagePage pageURL: String) async throws(SiteError) -> PageImageSource {
         guard let page = ImagePage(pageURL), let url = URL(string: "fixture://img/\(page.gid)/\(page.page)") else { throw .parse }
-        return url
+        let original = FixtureArt.isResampled(page: page.page) ? URL(string: "fixture://original/\(page.gid)/\(page.page)") : nil
+        return PageImageSource(url: url, originalURL: original)
     }
 
     @concurrent public func imageData(from url: URL) async throws(SiteError) -> Data {
@@ -116,6 +128,11 @@ public struct FixtureGalleryService: GalleryService {
         }
         let parts = url.pathComponents.filter { $0 != "/" }
         guard parts.count >= 2, let page = Int(parts[1]) else { throw .parse }
+        if url.host() == "original" {
+            // Originals: fixture://original/<gid>/<page>
+            if refusesOriginals { throw .loginRequired }
+            return FixtureArt.original(gid: parts[0], page: page)
+        }
         return FixtureArt.page(gid: parts[0], page: page)
     }
 
@@ -140,11 +157,54 @@ public enum FixtureArt {
         render(size: CGSize(width: 250, height: 350), hue: stableHue(gid), label: "萌", caption: String(gid.suffix(3)))
     }
 
+    /// A page as the fixture site shows it: resampled and recompressed, except every fifth page, which
+    /// is small enough to be shown as the original itself.
     public static func page(gid: String, page: Int) -> Data {
-        // Mix of portrait and landscape pages so the reader handles both.
-        let size = page % 7 == 0 ? CGSize(width: 1400, height: 1000) : CGSize(width: 1000, height: 1414)
-        let hue = (stableHue(gid) + CGFloat(page) * 0.07).truncatingRemainder(dividingBy: 1)
-        return render(size: size, hue: hue, label: "\(page)", caption: "P.\(page)").jpegData(compressionQuality: 0.7) ?? Data()
+        rendered("page|\(gid)|\(page)") {
+            render(size: pageSize(page), hue: pageHue(gid: gid, page: page), label: "\(page)", caption: "P.\(page)").jpegData(compressionQuality: 0.7) ?? Data()
+        }
+    }
+
+    /// A page's original file: larger and less compressed than what the site shows, when it resamples it.
+    public static func original(gid: String, page: Int) -> Data {
+        guard isResampled(page: page) else { return self.page(gid: gid, page: page) }
+        return rendered("original|\(gid)|\(page)") {
+            render(size: originalSize(page), hue: pageHue(gid: gid, page: page), label: "\(page)", caption: "P.\(page)").jpegData(compressionQuality: 0.9) ?? Data()
+        }
+    }
+
+    /// A page's image key: the start of its original file's SHA-1, like the site's.
+    public static func imageKey(gid: String, page: Int) -> String {
+        String(GalleryFileStore.sha1(original(gid: gid, page: page)).prefix(10))
+    }
+
+    static func isResampled(page: Int) -> Bool { page % 5 != 0 }
+
+    /// Mix of portrait and landscape pages so the reader handles both.
+    private static func pageSize(_ page: Int) -> CGSize {
+        page % 7 == 0 ? CGSize(width: 1400, height: 1000) : CGSize(width: 1000, height: 1414)
+    }
+
+    /// The original of a resampled page.
+    public static func originalSize(_ page: Int) -> CGSize {
+        page % 7 == 0 ? CGSize(width: 2240, height: 1600) : CGSize(width: 1600, height: 2262)
+    }
+
+    private static func pageHue(gid: String, page: Int) -> CGFloat {
+        (stableHue(gid) + CGFloat(page) * 0.07).truncatingRemainder(dividingBy: 1)
+    }
+
+    /// Rendered pages are kept, so a page's bytes (and so its image key) never change within a run.
+    private static let renders = Mutex<[String: Data]>([:])
+
+    private static func rendered(_ key: String, _ make: () -> Data) -> Data {
+        if let data = renders.withLock({ $0[key] }) { return data }
+        let data = make()
+        return renders.withLock { cache in
+            if let existing = cache[key] { return existing }
+            cache[key] = data
+            return data
+        }
     }
 
     static func render(size: CGSize, hue: CGFloat, label: String, caption: String) -> UIImage {

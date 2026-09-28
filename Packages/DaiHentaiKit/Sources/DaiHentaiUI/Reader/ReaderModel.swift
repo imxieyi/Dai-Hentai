@@ -28,7 +28,7 @@ final class ReaderModel {
     /// `currentPage` (a fresh scroll view first reports whatever page it happens to show).
     private(set) var pendingScroll: Int?
     /// Bumped when a page is reloaded so its image is decoded again.
-    private(set) var pageVersions: [Int: Int] = [:]
+    private var pageVersions: [Int: Int] = [:]
     var isDeleted = false
     private var pendingPrepend: Int?
     private var saveTask: Task<Void, Never>?
@@ -121,6 +121,11 @@ final class ReaderModel {
 
     func fileURL(forPage page: Int) -> URL? {
         downloader?.fileURL(forPage: page)
+    }
+
+    /// Changes whenever the page's file does (「重新載入這頁」, or a download swapping in the original).
+    func version(of page: Int) -> Int {
+        pageVersions[page, default: 0] + (downloader?.pageRevisions[page] ?? 0)
     }
 
     /// Legacy title line: 「當前:12 總共:40」 / 「當前:12 卡在:13」 / 「讀取中」.

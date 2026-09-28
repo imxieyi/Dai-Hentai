@@ -4,6 +4,10 @@ public enum SiteError: Error, Sendable, Equatable {
     case network
     case parse
     case galleryNotFound
+    /// The image limits ran out: the site shows `509.gif` (or answers HTTP 509) instead of images.
+    case rateLimited
+    /// Originals are only for logged-in users (`fullimg` bounces to `bounce_login.php`).
+    case loginRequired
 }
 
 /// Everything the app needs from the site. `LiveGalleryService` talks to e-/exhentai;
@@ -17,10 +21,11 @@ public protocol GalleryService: Sendable {
     /// Image page links on thumbnail page `index` (0-based) of a gallery.
     @concurrent func imagePageLinks(gid: String, token: String, index: Int) async throws(SiteError) -> [String]
 
-    /// Resolves an image page (`/s/{imgkey}/{gid}-{page}`) to the real image URL.
-    @concurrent func imageURL(forImagePage pageURL: String) async throws(SiteError) -> URL
+    /// Resolves an image page (`/s/{imgkey}/{gid}-{page}`) to its image, and its original file when that isn't it.
+    @concurrent func imageSource(forImagePage pageURL: String) async throws(SiteError) -> PageImageSource
 
-    /// Downloads image bytes.
+    /// Downloads image bytes. Throws `.rateLimited` for the image-limits placeholder and `.loginRequired`
+    /// when an original needs a login, rather than returning them as images.
     @concurrent func imageData(from url: URL) async throws(SiteError) -> Data
 
     /// Fetches metadata for specific galleries (used by the API diagnostic).
@@ -88,15 +93,16 @@ public struct LiveGalleryService: GalleryService {
         }
     }
 
-    @concurrent public func imageURL(forImagePage pageURL: String) async throws(SiteError) -> URL {
+    @concurrent public func imageSource(forImagePage pageURL: String) async throws(SiteError) -> PageImageSource {
         guard let page = ImagePage(pageURL) else { throw .parse }
 
         if let showKey = await ShowKeyCache.shared.key(for: page.gid) {
             let body: [String: Any] = ["method": "showpage", "gid": Int(page.gid) ?? 0, "page": page.page, "imgkey": page.imageKey, "showkey": showKey]
             if let data = try? await postJSON(body),
-               let source = try? SiteParser.imageURL(inShowPageResponse: data),
-               let url = URL(string: source) {
-                return url
+               let sources = try? SiteParser.imageSources(inShowPageResponse: data),
+               let source = PageImageSource(sources) {
+                if SiteParser.isRateLimitImage(sources.image) { throw .rateLimited }
+                return source
             }
             // The key may have expired; fall back to the page itself below.
             await ShowKeyCache.shared.remove(for: page.gid)
@@ -107,18 +113,34 @@ public struct LiveGalleryService: GalleryService {
         if let showKey = SiteParser.showKey(inImagePage: html) {
             await ShowKeyCache.shared.set(showKey, for: page.gid)
         }
-        guard let source = try? SiteParser.imageURL(inImagePage: html), let imageURL = URL(string: source) else { throw .parse }
-        return imageURL
+        guard let sources = try? SiteParser.imageSources(inImagePage: html), let source = PageImageSource(sources) else { throw .parse }
+        if SiteParser.isRateLimitImage(sources.image) { throw .rateLimited }
+        return source
     }
 
     @concurrent public func imageData(from url: URL) async throws(SiteError) -> Data {
+        let data: Data
+        let response: URLResponse
         do {
-            let (data, response) = try await imageSession.data(from: url)
-            guard (response as? HTTPURLResponse).map({ (200..<300).contains($0.statusCode) }) ?? true, !data.isEmpty else { throw SiteError.network }
-            return data
+            (data, response) = try await imageSession.data(from: url)
         } catch {
             throw .network
         }
+        try Self.check(imageResponse: response, data: data)
+        return data
+    }
+
+    /// Turns what the site sends instead of an image into an error: the image-limits placeholder (HTTP 509, or a
+    /// redirect to `509.gif`), the login bounce for originals, or any other page.
+    static func check(imageResponse response: URLResponse, data: Data) throws(SiteError) {
+        let http = response as? HTTPURLResponse
+        if http?.statusCode == 509 || http?.statusCode == 429 { throw .rateLimited }
+        if let url = response.url {
+            if SiteParser.isRateLimitImage(url.absoluteString) { throw .rateLimited }
+            if url.path().contains("bounce_login") { throw .loginRequired }
+        }
+        guard http.map({ (200..<300).contains($0.statusCode) }) ?? true, !data.isEmpty else { throw .network }
+        if response.mimeType?.hasPrefix("text/") == true { throw .parse }
     }
 
     // MARK: - Transport
@@ -149,7 +171,28 @@ public struct LiveGalleryService: GalleryService {
     }
 }
 
+/// An image page resolved.
+public struct PageImageSource: Hashable, Sendable {
+    /// What the page shows: resampled when the original is large, and usually recompressed. Online reading uses this.
+    public var url: URL
+    /// The original file (「Download original」), `nil` when `url` already is it. The site only serves it to
+    /// logged-in users with image limits (or GP) left, and answers everyone else with a page instead.
+    public var originalURL: URL?
+
+    public init(url: URL, originalURL: URL? = nil) {
+        self.url = url
+        self.originalURL = originalURL
+    }
+
+    init?(_ sources: SiteParser.ImageSources) {
+        guard let url = URL(string: sources.image) else { return nil }
+        self.init(url: url, originalURL: sources.original.flatMap(URL.init(string:)))
+    }
+}
+
 /// `https://e-hentai.org/s/{imgkey}/{gid}-{page}` broken into parts.
+///
+/// The image key is the start of the original file's SHA-1, so it also tells whether a saved file is the original.
 public struct ImagePage: Hashable, Sendable {
     public let imageKey: String
     public let gid: String

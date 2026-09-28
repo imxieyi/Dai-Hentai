@@ -29,16 +29,53 @@ func fixtureText(_ name: String) throws -> String {
         ])
     }
 
-    @Test func imagePageYieldsShowKeyAndImage() throws {
+    @Test func imagePageYieldsShowKeyImageAndOriginal() throws {
         let html = try fixtureText("imagepage.html")
         #expect(SiteParser.showKey(inImagePage: html) == "6ljzzv8ans6")
-        #expect(try SiteParser.imageURL(inImagePage: html)?.hasSuffix("/001.jpg") == true)
+        let sources = try #require(try SiteParser.imageSources(inImagePage: html))
+        #expect(sources.image.hasSuffix("/001.webp"))
+        #expect(sources.original == "https://e-hentai.org/fullimg/4217580/1/1bb8s7xansc/001.jpg")
     }
 
-    @Test func showPageResponseYieldsImage() throws {
-        let url = try SiteParser.imageURL(inShowPageResponse: fixture("showpage.json"))
-        #expect(url == "https://example.hath.network/h/def-1024-1024-jpg/002.jpg")
-        #expect(try SiteParser.imageURL(inShowPageResponse: Data(#"{"error":"Key mismatch"}"#.utf8)) == nil)
+    @Test func showPageResponseYieldsImageAndOriginal() throws {
+        let sources = try #require(try SiteParser.imageSources(inShowPageResponse: fixture("showpage.json")))
+        #expect(sources.image == "https://example.hath.network/h/def-1280-1807-wbp/002.webp")
+        #expect(sources.original == "https://e-hentai.org/fullimg/4217580/2/5b8z182ansc/002.jpg")
+        #expect(try SiteParser.imageSources(inShowPageResponse: Data(#"{"error":"Key mismatch"}"#.utf8)) == nil)
+    }
+
+    @Test func theImageLimitsPlaceholderIsRecognised() throws {
+        #expect(SiteParser.isRateLimitImage("https://ehgt.org/g/509.gif"))
+        #expect(SiteParser.isRateLimitImage("https://example.hath.network/h/abc/509s.gif"))
+        #expect(!SiteParser.isRateLimitImage("https://example.hath.network/h/abc-1280-1807-wbp/001.webp"))
+        let html = #"<div id="i3"><img id="img" src="https://ehgt.org/g/509.gif" /></div>"#
+        #expect(try SiteParser.imageSources(inImagePage: html)?.image == "https://ehgt.org/g/509.gif")
+    }
+
+    @Test func imageResponsesThatArentImagesAreErrors() throws {
+        func check(_ url: String, status: Int = 200, type: String = "image/jpeg") -> SiteError? {
+            let response = HTTPURLResponse(url: URL(string: url)!, statusCode: status, httpVersion: nil, headerFields: ["Content-Type": type])!
+            do {
+                try LiveGalleryService.check(imageResponse: response, data: Data([1, 2, 3]))
+                return nil
+            } catch {
+                return error
+            }
+        }
+        #expect(check("https://example.hath.network/h/abc/001.jpg") == nil)
+        #expect(check("https://example.hath.network/h/abc/001.jpg", status: 509) == .rateLimited)
+        #expect(check("https://ehgt.org/g/509.gif", type: "image/gif") == .rateLimited)
+        #expect(check("https://e-hentai.org/bounce_login.php?b=ds&bt=7-1-1-key", type: "text/html") == .loginRequired)
+        #expect(check("https://e-hentai.org/fullimg/1/1/key/001.jpg", type: "text/html") == .parse)
+        #expect(check("https://example.hath.network/h/abc/001.jpg", status: 404) == .network)
+    }
+
+    @Test func aPageShownAsTheOriginalHasNoOriginalLink() throws {
+        let html = #"<div id="i3"><img id="img" src="https://example.hath.network/h/9ca0497da6-335858-1280-1833-jpg/1.jpg" /></div><div id="i6"><div><a href="https://e-hentai.org/?f_shash=9ca0497da6">Show galleries with this image</a></div></div>"#
+        let sources = try #require(try SiteParser.imageSources(inImagePage: html))
+        #expect(sources.original == nil)
+        let response = Data(#"{"i3":"<img id=\"img\" src=\"https://example.hath.network/h/9ca0-jpg/1.jpg\" />","i6":"<div>Reload broken image</div>"}"#.utf8)
+        #expect(try SiteParser.imageSources(inShowPageResponse: response)?.original == nil)
     }
 
     @Test func gdataIsParsedLenientlyAndKeepsListOrder() throws {

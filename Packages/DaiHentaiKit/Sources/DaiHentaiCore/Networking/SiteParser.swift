@@ -55,21 +55,45 @@ public enum SiteParser {
         html.firstMatch(of: /showkey\s*=\s*"([^"]+)"/).map { String($0.1) }
     }
 
-    /// The full-size image URL (`<img id="img" src="...">`) on an image page.
-    public static func imageURL(inImagePage html: String) throws -> String? {
-        let document = try SwiftSoup.parse(html)
-        let source = try document.select("img#img").first()?.attr("src")
-        return source.flatMap { $0.isEmpty ? nil : $0 }
+    /// What an image page shows, and where its original file is when that isn't it.
+    public struct ImageSources: Equatable, Sendable {
+        /// `<img id="img">`: resampled when the original is large, and usually recompressed.
+        public var image: String
+        /// 「Download original」 (`/fullimg/...`), only there when `image` isn't the original.
+        public var original: String?
     }
 
-    /// The image URL from a `showpage` API response, whose `i3` field is an HTML fragment.
-    public static func imageURL(inShowPageResponse data: Data) throws -> String? {
+    /// The image (`<img id="img" src="...">`) and the original's link (in `#i6`) on an image page.
+    public static func imageSources(inImagePage html: String) throws -> ImageSources? {
+        let document = try SwiftSoup.parse(html)
+        guard let image = try nonEmpty(document.select("img#img").first()?.attr("src")) else { return nil }
+        return ImageSources(image: image, original: try originalLink(in: document))
+    }
+
+    /// The same from a `showpage` API response, whose `i3` (image) and `i6` (links) fields are HTML fragments.
+    public static func imageSources(inShowPageResponse data: Data) throws -> ImageSources? {
         guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
         if object["error"] != nil { return nil }
         guard let fragment = object["i3"] as? String else { return nil }
         let document = try SwiftSoup.parseBodyFragment(fragment)
-        let source = try (document.select("img#img").first() ?? document.select("a img").first())?.attr("src")
-        return source.flatMap { $0.isEmpty ? nil : $0 }
+        guard let image = try nonEmpty((document.select("img#img").first() ?? document.select("a img").first())?.attr("src")) else { return nil }
+        let links = try (object["i6"] as? String).map { try SwiftSoup.parseBodyFragment($0) }
+        return ImageSources(image: image, original: try links.flatMap(originalLink(in:)))
+    }
+
+    /// Whether an image URL is the placeholder the site shows once the image limits run out.
+    public static func isRateLimitImage(_ url: String) -> Bool {
+        let path = URL(string: url)?.path() ?? url
+        return path.hasSuffix("/509.gif") || path.hasSuffix("/509s.gif")
+    }
+
+    /// `/fullimg/{gid}/{page}/{key}/{name}` (older pages: `fullimg.php?...`).
+    private static func originalLink(in document: Document) throws -> String? {
+        try nonEmpty(document.select("a[href*=fullimg]").first()?.attr("href"))
+    }
+
+    private static func nonEmpty(_ string: String?) -> String? {
+        string.flatMap { $0.isEmpty ? nil : $0 }
     }
 
     /// Galleries from a `gdata` API response, keeping the order of `order` when given.

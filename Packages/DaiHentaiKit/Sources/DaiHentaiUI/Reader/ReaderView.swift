@@ -302,7 +302,7 @@ private struct ReaderContent: View {
     @ViewBuilder
     private func pageView(_ page: Int, size: CGSize) -> some View {
         if let url = reader.fileURL(forPage: page) {
-            PageImage(fileURL: url, targetSize: size, version: reader.pageVersions[page, default: 0])
+            PageImage(fileURL: url, targetSize: size, version: reader.version(of: page))
                 .frame(width: size.width, height: size.height)
                 .contentShape(.rect)
                 .contextMenu { pageMenu(page, url: url) }

@@ -81,6 +81,25 @@ private struct MainTabs: View {
             guard let finished else { return }
             model.toasts.show(.toastDownloadFinished(finished.bestTitle), kaomoji: "O3Ob", symbol: "checkmark.circle.fill")
         }
+        .onChange(of: model.downloads.lastNotice) { _, notice in
+            guard let notice else { return }
+            switch notice.kind {
+            case .finishedWithoutOriginals(let gallery):
+                model.toasts.show(.toastDownloadFinishedWithoutOriginals(gallery.bestTitle), kaomoji: "O口O", duration: .seconds(3.5))
+            case .originalsRefused:
+                model.toasts.show(.toastOriginalsNeedLogin, kaomoji: "O口O", duration: .seconds(3.5))
+            case .rateLimited:
+                model.toasts.show(.toastRateLimited, kaomoji: "O口O", duration: .seconds(4))
+            case .batchFinished(let work, let originalsRefused):
+                if work == .originals {
+                    model.toasts.show(.toastUpgradedToOriginals, kaomoji: "O3Ob", symbol: "checkmark.circle.fill")
+                } else if originalsRefused {
+                    model.toasts.show(.toastMissingImagesDownloadedWithoutOriginals, kaomoji: "O口O", duration: .seconds(3.5))
+                } else {
+                    model.toasts.show(.toastMissingImagesDownloaded, kaomoji: "O3Ob", symbol: "checkmark.circle.fill")
+                }
+            }
+        }
         .sensoryFeedback(.success, trigger: model.downloads.lastFinished)
         .sensoryFeedback(.start, trigger: model.downloads.activeDownloads.count) { old, new in new > old }
     }
