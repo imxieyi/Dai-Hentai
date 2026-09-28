@@ -32,6 +32,12 @@ final class SmokeUITests: XCTestCase {
         _ = XCTWaiter.wait(for: [XCTestExpectation(description: "pause")], timeout: seconds)
     }
 
+    /// Taps the dimmed backdrop under the status bar (which ignores taps), away from the card and its menu.
+    private func dismissContextMenu() {
+        app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.09)).tap()
+        pause()
+    }
+
     func testLaunch() {
         app.launch()
         XCTAssertTrue(element("galleryCard").waitForExistence(timeout: 10))
@@ -197,6 +203,12 @@ final class SmokeUITests: XCTestCase {
 
         // The seeded downloads came from "3.x": no covers. Fetching one is quiet: no toast, and the row goes away.
         XCTAssertTrue(app.staticTexts["缺少封面"].exists)
+        // While something is missing, the context menu offers 繼續下載 too.
+        element("galleryCard").press(forDuration: 1.2)
+        pause()
+        XCTAssertTrue(element("menuResumeDownload").exists)
+        snap("35-downloads-incomplete-menu")
+        dismissContextMenu()
         element("fetchCoverButton").tap()
         var sawToast = false
         for _ in 0..<10 {
@@ -207,6 +219,13 @@ final class SmokeUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["缺少封面"].exists)
         XCTAssertFalse(element("fetchCoverButton").exists)
         snap("35-downloads-cover-fetched")
+        // A complete download has nothing to resume.
+        element("galleryCard").press(forDuration: 1.2)
+        pause()
+        XCTAssertTrue(app.buttons["我要現在看"].exists)
+        XCTAssertFalse(element("menuResumeDownload").exists)
+        snap("35-downloads-complete-menu")
+        dismissContextMenu()
         element("galleryCard").tap()
         pause(2.5)
         snap("36-reader-downloaded")

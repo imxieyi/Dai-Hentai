@@ -204,6 +204,21 @@ struct LegacyDatabaseBuilder {
         center.detachReader(from: gallery)
     }
 
+    @Test func onlyAnIncompleteDownloadIsMissingFiles() throws {
+        let library = try makeLibrary()
+        let gallery = FixtureGalleryService.galleries[6]
+        library.markDownloaded(gallery)
+        #expect(library.isMissingFiles(gallery))
+
+        for page in 1...gallery.fileCount {
+            try library.files.write(FixtureArt.page(gid: gallery.gid, page: page), folder: gallery.folderName, fileName: "\(gallery.gid)-\(page)")
+        }
+        #expect(library.isMissingFiles(gallery), "the cover is still missing")
+
+        try library.files.write(Data([1]), folder: gallery.folderName, fileName: GalleryFileStore.coverFileName)
+        #expect(!library.isMissingFiles(gallery))
+    }
+
     @Test func resumingFetchesOnlyTheMissingCover() async throws {
         let library = try makeLibrary()
         let gallery = FixtureGalleryService.galleries[6]

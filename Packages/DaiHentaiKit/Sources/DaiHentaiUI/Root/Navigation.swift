@@ -39,11 +39,16 @@ struct GalleryContextMenu: View {
         Button(.commonReadNow, systemImage: "book") {
             model.router.openReader(gallery)
         }
-        if !isDownloaded || !isDownloading {
-            Button(isDownloaded ? LocalizedStringResource.commonResumeDownload : .commonWantDownload, systemImage: "arrow.down.circle") {
+        if !isDownloaded {
+            Button(.commonWantDownload, systemImage: "arrow.down.circle") {
                 model.download(gallery)
             }
-            .disabled(isDownloaded && isDownloading)
+        } else if !isDownloading, model.library.isMissingFiles(gallery) {
+            // Same as the Downloads tab's 「繼續下載」: only when pages or the cover are missing.
+            Button(.commonResumeDownload, systemImage: "arrow.down.circle") {
+                model.downloads.resume(gallery)
+            }
+            .accessibilityIdentifier("menuResumeDownload")
         }
         Button(.commonSearchRelated, systemImage: "text.magnifyingglass") {
             model.router.galleryCard = GalleryCardRoute(gallery: gallery, relatedWord: "")

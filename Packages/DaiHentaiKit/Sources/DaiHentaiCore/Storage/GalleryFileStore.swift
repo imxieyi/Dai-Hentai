@@ -37,6 +37,12 @@ public struct GalleryFileStore: Sendable {
         try data.write(to: folder.appending(path: fileName, directoryHint: .notDirectory), options: .atomic)
     }
 
+    /// Pages (`{gid}-{page}`) in a gallery folder and whether its cover is there, from one directory listing.
+    public func contents(ofFolder folderName: String, gid: String) -> (pages: Int, hasCover: Bool) {
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: folderURL(folderName).path(percentEncoded: false))) ?? []
+        return (names.count { $0.hasPrefix("\(gid)-") }, names.contains(Self.coverFileName))
+    }
+
     public func removeFolder(_ folderName: String) {
         guard !folderName.isEmpty else { return }
         try? FileManager.default.removeItem(at: folderURL(folderName))

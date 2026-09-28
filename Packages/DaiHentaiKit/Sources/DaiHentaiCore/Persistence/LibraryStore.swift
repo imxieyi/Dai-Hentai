@@ -80,6 +80,13 @@ public final class LibraryStore {
         gallery(forKey: info.id)?.isDownloaded ?? false
     }
 
+    /// Whether a downloaded gallery still lacks pages or its cover on disk (「繼續下載」 fetches them).
+    public func isMissingFiles(_ info: GalleryInfo) -> Bool {
+        let info = gallery(forKey: info.id)?.info ?? info
+        let contents = files.contents(ofFolder: info.folderName, gid: info.gid)
+        return contents.pages < info.fileCount || (!contents.hasCover && info.thumbURL != nil)
+    }
+
     public func markDownloaded(_ info: GalleryInfo) {
         let stored = gallery(forKey: info.id) ?? {
             let new = StoredGallery(info)

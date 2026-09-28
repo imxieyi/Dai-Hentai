@@ -121,10 +121,9 @@ struct DownloadsView: View {
             var noCover: Set<String> = []
             var bytes: Int64 = 0
             for item in items {
-                let folder = files.folderURL(item.folder)
-                let names = (try? FileManager.default.contentsOfDirectory(atPath: folder.path(percentEncoded: false))) ?? []
-                counts[item.key] = names.filter { $0.hasPrefix("\(item.gid)-") }.count
-                if item.hasThumb, !names.contains(GalleryFileStore.coverFileName) { noCover.insert(item.key) }
+                let contents = files.contents(ofFolder: item.folder, gid: item.gid)
+                counts[item.key] = contents.pages
+                if item.hasThumb, !contents.hasCover { noCover.insert(item.key) }
                 bytes += files.size(ofFolder: item.folder)
             }
             return (counts, noCover, bytes)
