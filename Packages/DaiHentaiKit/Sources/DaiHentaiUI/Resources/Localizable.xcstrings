@@ -1981,6 +1981,66 @@
         }
       }
     },
+    "Downloads.IncompleteMissingCover" : {
+      "extractionState" : "manual",
+      "comment" : "Pages on disk / page count, and the cover isn't saved",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incomplete %1$lld/%2$lld · No cover"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未完了 %1$lld/%2$lld · 表紙なし"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未完成 %1$lld/%2$lld · 缺少封面"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未完成 %1$lld/%2$lld · 缺少封面"
+          }
+        }
+      }
+    },
+    "Downloads.MissingCover" : {
+      "extractionState" : "manual",
+      "comment" : "A downloaded gallery whose cover isn't saved (3.x never saved covers)",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cover missing"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表紙がありません"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺少封面"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺少封面"
+          }
+        }
+      }
+    },
     "ExKey.FormatHint" : {
       "extractionState" : "manual",
       "localizations" : {

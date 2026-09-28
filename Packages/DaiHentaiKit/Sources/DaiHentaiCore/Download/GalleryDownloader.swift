@@ -6,7 +6,8 @@ import Observation
 /// to disk with a small prioritized queue, and tracks per-page state for the reader.
 ///
 /// Files are named `{gid}-{page}` in the gallery folder, the same as 3.x, so pages already
-/// on disk are shown without touching the network.
+/// on disk are shown without touching the network. A full download also saves the cover
+/// (`cover`), which 3.x never did.
 @MainActor
 @Observable
 public final class GalleryDownloader {
@@ -32,6 +33,15 @@ public final class GalleryDownloader {
         case failed
     }
 
+    public enum CoverState: Equatable, Sendable {
+        /// The disk hasn't been checked yet.
+        case unknown
+        case missing
+        case downloading
+        case ready
+        case failed
+    }
+
     public let gallery: GalleryInfo
     public private(set) var phase: Phase = .loading
     public private(set) var pageStates: [PageState]
@@ -39,10 +49,16 @@ public final class GalleryDownloader {
     public private(set) var isDownloadingAll = false
     /// Whether any page came from the network this session (a complete gallery found on disk doesn't count).
     public private(set) var didFetchPages = false
+    public private(set) var coverState: CoverState = .unknown
 
     public var pageCount: Int { pageStates.count }
     public var progress: Double { pageCount == 0 ? 0 : Double(readyCount) / Double(pageCount) }
-    public var isComplete: Bool { pageCount > 0 && readyCount == pageCount }
+    /// Every page is on disk. This is what readers and progress care about.
+    public var arePagesComplete: Bool { pageCount > 0 && readyCount == pageCount }
+    /// The cover is on disk, or there is none to save (old records without a thumbnail).
+    public var hasCover: Bool { coverState == .ready || gallery.thumbURL == nil }
+    /// Every page and the cover are on disk.
+    public var isComplete: Bool { arePagesComplete && hasCover }
     /// First page (0-based) whose download failed, if any ("卡在").
     public var firstFailedPage: Int? { pageStates.firstIndex(of: .failed) }
 
@@ -61,6 +77,9 @@ public final class GalleryDownloader {
     private var queue: [Int] = []
     private var retries: [Int: Int] = [:]
     private var startTask: Task<Void, Never>?
+    private var coverTask: Task<Void, Never>?
+    private var coverAttempts = 0
+    private var isRetryingFirstLinkPage = false
     private let maxConcurrentDownloads = 3
     private let maxConcurrentLinkFetches = 2
 
@@ -107,7 +126,7 @@ public final class GalleryDownloader {
         pump()
     }
 
-    /// "我要下載": keep going until every page is on disk.
+    /// "我要下載": keep going until every page and the cover are on disk, or nothing is left to try.
     public func downloadAll() {
         isDownloadingAll = true
         start()
@@ -116,8 +135,33 @@ public final class GalleryDownloader {
             pageStates[index] = .queued
         }
         queue.append(contentsOf: missing.filter { !queue.contains($0) })
+        coverAttempts = 0
+        fetchCover()
         pump()
-        finishIfComplete()
+        settle()
+    }
+
+    /// Saves the cover next to the pages, unless it's already there.
+    public func fetchCover() {
+        guard coverTask == nil, coverState != .ready, let url = gallery.thumbURL else { return }
+        coverState = .downloading
+        let service = service, files = files, folder = folder
+        coverTask = Task {
+            let saved = await Self.saveCover(from: url, service: service, files: files, folder: folder)
+            guard !Task.isCancelled else { return }
+            self.coverTask = nil
+            if saved {
+                self.coverState = .ready
+            } else {
+                self.coverState = .failed
+                self.coverAttempts += 1
+                if self.isDownloadingAll, self.coverAttempts < 3 {
+                    self.fetchCover()
+                    return
+                }
+            }
+            self.settle()
+        }
     }
 
     /// Stops all work (reader closed without a full download, or gallery deleted).
@@ -125,6 +169,9 @@ public final class GalleryDownloader {
         isDownloadingAll = false
         queue.removeAll()
         startTask?.cancel()
+        coverTask?.cancel()
+        coverTask = nil
+        if coverState == .downloading { coverState = .missing }
         linkTasks.values.forEach { $0.cancel() }
         downloadTasks.values.forEach { $0.cancel() }
         linkTasks.removeAll()
@@ -158,15 +205,21 @@ public final class GalleryDownloader {
     private func performStart() async {
         // 1. Whatever is already on disk is readable immediately (also offline).
         let folder = folder, files = files, gid = gallery.gid, count = pageCount
-        let sizes = await Task.detached(priority: .userInitiated) { () -> [Int: CGSize] in
+        let (sizes, coverOnDisk) = await Task.detached(priority: .userInitiated) { () -> ([Int: CGSize], Bool) in
             var sizes: [Int: CGSize] = [:]
             for index in 0..<count {
                 let url = files.fileURL(folder: folder, fileName: "\(gid)-\(index + 1)")
                 if let size = GalleryFileStore.pixelSize(ofImageAt: url) { sizes[index] = size }
             }
-            return sizes
+            let coverOnDisk = GalleryFileStore.pixelSize(ofImageAt: files.coverURL(folder: folder)) != nil
+            return (sizes, coverOnDisk)
         }.value
         guard !Task.isCancelled else { return }
+        if coverOnDisk {
+            coverState = .ready
+        } else if coverState == .unknown {
+            coverState = .missing
+        }
         for (index, size) in sizes where pageStates.indices.contains(index) && !pageStates[index].isReady {
             pageStates[index] = .ready(size)
             readyCount += 1
@@ -183,7 +236,7 @@ public final class GalleryDownloader {
             phase = readyCount > 0 || pageCount > 0 ? .ready : .failed
         }
         pump()
-        finishIfComplete()
+        settle()
     }
 
     // MARK: - Links
@@ -237,7 +290,7 @@ public final class GalleryDownloader {
         }
         // Galleries with unknown size (old records): keep discovering while pages come back full.
         if gallery.fileCount == 0, let perPage = linksPerPage, fetched.count == perPage {
-            Task { await self.loadLinkPage(linkPage + 1); self.pump() }
+            Task { await self.loadLinkPage(linkPage + 1); self.pump(); self.settle() }
         }
     }
 
@@ -267,17 +320,44 @@ public final class GalleryDownloader {
             if let link = links[page] {
                 queue.remove(at: index)
                 startDownload(page, link: link)
-            } else {
-                if let linkPage = linkPage(forPage: page), linkTasks[linkPage] == nil, !loadedLinkPages.contains(linkPage), linkTasks.count < maxConcurrentLinkFetches {
+            } else if let linkPage = linkPage(forPage: page) {
+                if loadedLinkPages.contains(linkPage) {
+                    // The site lists fewer pages than the gallery claims.
+                    pageStates[page] = .failed
+                    queue.remove(at: index)
+                    continue
+                }
+                if linkTasks[linkPage] == nil, linkTasks.count < maxConcurrentLinkFetches {
                     Task {
                         let outcome = await self.loadLinkPage(linkPage)
                         if case .failure = outcome { self.failPages(onLinkPage: linkPage) }
                         self.pump()
+                        self.settle()
+                    }
+                }
+                index += 1
+            } else {
+                // The first link page failed (offline?): try it once more, then give up on what's queued.
+                if phase != .loading, !isRetryingFirstLinkPage {
+                    isRetryingFirstLinkPage = true
+                    Task {
+                        let outcome = await self.loadLinkPage(0)
+                        self.isRetryingFirstLinkPage = false
+                        if case .failure = outcome { self.failQueuedPages() }
+                        self.pump()
+                        self.settle()
                     }
                 }
                 index += 1
             }
         }
+    }
+
+    private func failQueuedPages() {
+        for index in queue where pageStates.indices.contains(index) && pageStates[index] == .queued {
+            pageStates[index] = .failed
+        }
+        queue.removeAll()
     }
 
     private func failPages(onLinkPage linkPage: Int) {
@@ -309,7 +389,7 @@ public final class GalleryDownloader {
                 }
             }
             self.pump()
-            self.finishIfComplete()
+            self.settle()
         }
     }
 
@@ -326,8 +406,25 @@ public final class GalleryDownloader {
         }
     }
 
-    private func finishIfComplete() {
-        guard isDownloadingAll, isComplete else { return }
+    @concurrent
+    private static func saveCover(from url: URL, service: any GalleryService, files: GalleryFileStore, folder: String) async -> Bool {
+        if GalleryFileStore.pixelSize(ofImageAt: files.coverURL(folder: folder)) != nil { return true }
+        do {
+            let data = try await service.imageData(from: url)
+            guard GalleryFileStore.pixelSize(ofImageData: data) != nil else { return false }
+            try files.write(data, folder: folder, fileName: GalleryFileStore.coverFileName)
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    /// Ends a full download once everything is on disk, or once nothing is left to try
+    /// (pages or the cover failed after their retries). 「繼續下載」 picks it up again later.
+    private func settle() {
+        guard isDownloadingAll, phase != .loading else { return }
+        let isIdle = queue.isEmpty && downloadTasks.isEmpty && linkTasks.isEmpty && coverTask == nil
+        guard isComplete || isIdle else { return }
         isDownloadingAll = false
         onFinishedAll?()
     }

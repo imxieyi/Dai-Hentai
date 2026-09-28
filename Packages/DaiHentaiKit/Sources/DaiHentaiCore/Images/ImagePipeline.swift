@@ -26,13 +26,17 @@ public actor ImagePipeline {
     }
 
     /// A cover thumbnail, downsampled so its longest side is at most `maxPixelSize`.
-    public func thumbnail(for url: URL, maxPixelSize: CGFloat) async -> UIImage? {
+    /// A downloaded gallery's saved cover (`localFile`) wins over the network, so it also shows offline.
+    public func thumbnail(for url: URL, localFile: URL? = nil, maxPixelSize: CGFloat) async -> UIImage? {
         let key = "thumb|\(url.absoluteString)|\(Int(maxPixelSize))"
         if let cached = memory.image(for: key) { return cached }
         if let running = inFlight[key] { return await running.value }
 
         let session = session
         let task = Task<UIImage?, Never> {
+            if let localFile, let image = await Self.downsample(fileURL: localFile, maxPixelSize: maxPixelSize) {
+                return image
+            }
             if url.scheme == "fixture" {
                 return FixtureArt.cover(gid: url.lastPathComponent)
             }

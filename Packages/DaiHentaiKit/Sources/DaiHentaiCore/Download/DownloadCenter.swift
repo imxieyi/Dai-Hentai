@@ -53,12 +53,16 @@ public final class DownloadCenter {
         downloader.start()
         if library.isDownloaded(gallery), !downloader.isDownloadingAll {
             // A downloaded gallery that isn't complete yet resumes, like 3.x. Check the disk first
-            // so a complete one doesn't flash 「下載中」.
+            // so a complete one doesn't flash 「下載中」. A missing cover alone is fetched quietly.
             Task { [weak downloader] in
                 guard let downloader else { return }
                 await downloader.waitUntilStarted()
-                guard downloader.readerCount > 0, !downloader.isComplete, downloader.phase != .notFound else { return }
-                downloader.downloadAll()
+                guard downloader.readerCount > 0, downloader.phase != .notFound else { return }
+                if !downloader.arePagesComplete {
+                    downloader.downloadAll()
+                } else if !downloader.hasCover {
+                    downloader.fetchCover()
+                }
                 self.updateIdleTimer()
             }
         }
@@ -86,9 +90,12 @@ public final class DownloadCenter {
         updateIdleTimer()
     }
 
-    /// Resumes every downloaded gallery that isn't complete (e.g. from the Downloads tab).
+    /// 「繼續下載」 on the Downloads tab: fetches whatever is missing (pages or the cover)
+    /// without counting as a visit, so the list keeps its order.
     public func resume(_ gallery: GalleryInfo) {
-        startDownload(gallery)
+        library.markDownloaded(gallery)
+        downloader(for: gallery).downloadAll()
+        updateIdleTimer()
     }
 
     /// Stops and forgets a gallery's downloader (before deleting it).
@@ -110,7 +117,8 @@ public final class DownloadCenter {
         let downloader = GalleryDownloader(gallery: gallery, service: serviceProvider(), library: library)
         downloader.onFinishedAll = { [weak self, weak downloader] in
             guard let self, let downloader else { return }
-            if downloader.didFetchPages { self.lastFinished = downloader.gallery }
+            // Announce new pages only: not a cover top-up, and not a download that gave up.
+            if downloader.didFetchPages, downloader.arePagesComplete { self.lastFinished = downloader.gallery }
             if downloader.readerCount == 0 {
                 self.downloaders[downloader.gallery.id] = nil
             }

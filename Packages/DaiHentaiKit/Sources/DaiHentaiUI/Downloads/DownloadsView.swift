@@ -16,6 +16,7 @@ struct DownloadsView: View {
     @Query(filter: #Predicate<StoredGallery> { $0.isDownloaded }, sort: \StoredGallery.lastViewedAt, order: .reverse)
     private var downloads: [StoredGallery]
     @State private var pagesOnDisk: [String: Int] = [:]
+    @State private var coverMissing: Set<String> = []
     @State private var totalBytes: Int64?
 
     var body: some View {
@@ -88,9 +89,12 @@ struct DownloadsView: View {
             ForEach(items) { stored in
                 VStack(spacing: 0) {
                     LibraryCard(stored: stored, extraBadge: badge(for: stored))
-                    if let onDisk = pagesOnDisk[stored.key], stored.fileCount > 0, onDisk < stored.fileCount, !model.downloads.isDownloading(stored.key) {
-                        IncompleteRow(onDisk: onDisk, total: stored.fileCount) {
-                            model.downloads.resume(stored.info)
+                    if let onDisk = pagesOnDisk[stored.key], !model.downloads.isDownloading(stored.key) {
+                        let pagesMissing = stored.fileCount > 0 && onDisk < stored.fileCount
+                        if pagesMissing || coverMissing.contains(stored.key) {
+                            IncompleteRow(onDisk: onDisk, total: stored.fileCount, pagesMissing: pagesMissing, coverMissing: coverMissing.contains(stored.key)) {
+                                model.downloads.resume(stored.info)
+                            }
                         }
                     }
                 }
@@ -108,35 +112,49 @@ struct DownloadsView: View {
         return .downloaded
     }
 
-    /// Counts pages on disk per gallery and the total size, off the main actor.
+    /// Counts pages on disk per gallery, notes missing covers and adds up the size, off the main actor.
     private func measure() async {
-        let items = downloads.map { (key: $0.key, folder: $0.info.folderName, gid: $0.gid) }
+        let items = downloads.map { (key: $0.key, folder: $0.info.folderName, gid: $0.gid, hasThumb: $0.info.thumbURL != nil) }
         let files = model.library.files
-        let result = await Task.detached(priority: .utility) { () -> ([String: Int], Int64) in
+        let result = await Task.detached(priority: .utility) { () -> ([String: Int], Set<String>, Int64) in
             var counts: [String: Int] = [:]
+            var noCover: Set<String> = []
             var bytes: Int64 = 0
             for item in items {
                 let folder = files.folderURL(item.folder)
                 let names = (try? FileManager.default.contentsOfDirectory(atPath: folder.path(percentEncoded: false))) ?? []
                 counts[item.key] = names.filter { $0.hasPrefix("\(item.gid)-") }.count
+                if item.hasThumb, !names.contains(GalleryFileStore.coverFileName) { noCover.insert(item.key) }
                 bytes += files.size(ofFolder: item.folder)
             }
-            return (counts, bytes)
+            return (counts, noCover, bytes)
         }.value
         pagesOnDisk = result.0
-        withAnimation { totalBytes = result.1 }
+        coverMissing = result.1
+        withAnimation { totalBytes = result.2 }
     }
 }
 
-/// 「未完成 7/18 · 繼續下載」 under a download that stopped.
+/// 「未完成 7/18 · 繼續下載」 under a download that stopped, or 「缺少封面」 when only the cover is
+/// missing (3.x didn't save covers). 繼續下載 fetches whatever is missing.
 private struct IncompleteRow: View {
     let onDisk: Int
     let total: Int
+    let pagesMissing: Bool
+    let coverMissing: Bool
     let resume: () -> Void
+
+    private var title: LocalizedStringResource {
+        switch (pagesMissing, coverMissing) {
+        case (true, true): .downloadsIncompleteMissingCover(onDisk, total)
+        case (true, false): .downloadsIncomplete(onDisk, total)
+        default: .downloadsMissingCover
+        }
+    }
 
     var body: some View {
         HStack {
-            Label(.downloadsIncomplete(onDisk, total), systemImage: "exclamationmark.circle")
+            Label(title, systemImage: pagesMissing ? "exclamationmark.circle" : "photo.badge.exclamationmark")
                 .font(.footnote.weight(.medium))
                 .foregroundStyle(.orange)
                 .monospacedDigit()
@@ -145,7 +163,7 @@ private struct IncompleteRow: View {
                 .font(.footnote.weight(.semibold))
                 .buttonStyle(.bordered)
                 .controlSize(.small)
-                .accessibilityIdentifier("resumeDownloadButton")
+                .accessibilityIdentifier(pagesMissing ? "resumeDownloadButton" : "fetchCoverButton")
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)

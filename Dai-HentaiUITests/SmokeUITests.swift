@@ -194,6 +194,19 @@ final class SmokeUITests: XCTestCase {
         tab("下載").tap()
         pause(2)
         snap("35-downloads")
+
+        // The seeded downloads came from "3.x": no covers. Fetching one is quiet: no toast, and the row goes away.
+        XCTAssertTrue(app.staticTexts["缺少封面"].exists)
+        element("fetchCoverButton").tap()
+        var sawToast = false
+        for _ in 0..<10 {
+            sawToast = sawToast || element("toast").exists
+            pause(0.2)
+        }
+        XCTAssertFalse(sawToast)
+        XCTAssertFalse(app.staticTexts["缺少封面"].exists)
+        XCTAssertFalse(element("fetchCoverButton").exists)
+        snap("35-downloads-cover-fetched")
         element("galleryCard").tap()
         pause(2.5)
         snap("36-reader-downloaded")

@@ -4,10 +4,12 @@ import SwiftUI
 // MARK: - Images
 
 /// Cover thumbnail loaded through the cookie-aware pipeline (ExHentai covers need cookies).
+/// A downloaded gallery's saved cover is used first, so it also shows offline.
 struct CoverImage: View {
-    let url: URL?
+    let gallery: GalleryInfo
     var cornerRadius: CGFloat = Metrics.coverRadius
 
+    @Environment(AppModel.self) private var model
     @Environment(\.displayScale) private var displayScale
     @State private var image: UIImage?
     @State private var failed = false
@@ -33,10 +35,11 @@ struct CoverImage: View {
                         .foregroundStyle(.quaternary)
                 }
             }
-            .task(id: url) {
-                guard let url, maxPixel > 0 else { return }
+            .task(id: gallery.thumb) {
+                guard let url = gallery.thumbURL, maxPixel > 0 else { return }
                 failed = false
-                let loaded = await ImagePipeline.shared.thumbnail(for: url, maxPixelSize: maxPixel)
+                let localFile = model.library.files.coverURL(folder: gallery.folderName)
+                let loaded = await ImagePipeline.shared.thumbnail(for: url, localFile: localFile, maxPixelSize: maxPixel)
                 withAnimation(.easeOut(duration: 0.2)) {
                     image = loaded
                     failed = loaded == nil

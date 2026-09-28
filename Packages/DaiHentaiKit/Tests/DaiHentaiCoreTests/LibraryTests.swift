@@ -2,6 +2,7 @@ import Foundation
 import SQLite3
 import SwiftData
 import Testing
+import UIKit
 @testable import DaiHentaiCore
 
 /// Builds a Couchbase Lite 1.4 style `db.sqlite3` (schema copied from CBL 1.4.4, `PRAGMA user_version = 17`).
@@ -175,7 +176,117 @@ struct LegacyDatabaseBuilder {
         #expect(library.isDownloaded(gallery))
         #expect(library.files.fileExists(folder: gallery.folderName, fileName: "\(gallery.gid)-1"))
         #expect(library.files.fileExists(folder: gallery.folderName, fileName: "\(gallery.gid)-\(gallery.fileCount)"))
+        #expect(library.files.fileExists(folder: gallery.folderName, fileName: GalleryFileStore.coverFileName))
         #expect(center.downloaders[gallery.id] == nil) // released once finished with no reader attached
+        #expect(center.lastFinished == gallery)
+    }
+
+    @Test func aMissingCoverIsFetchedQuietlyWhenReading() async throws {
+        let library = try makeLibrary()
+        let gallery = FixtureGalleryService.galleries[6]
+        for page in 1...gallery.fileCount {
+            try library.files.write(FixtureArt.page(gid: gallery.gid, page: page), folder: gallery.folderName, fileName: "\(gallery.gid)-\(page)")
+        }
+        library.markDownloaded(gallery) // a 3.x download: every page, no cover
+        let center = DownloadCenter(library: library) { FixtureGalleryService(latency: .milliseconds(5)) }
+
+        let downloader = center.attachReader(to: gallery)
+        var sawDownloading = false
+        for _ in 0..<200 where !downloader.isComplete {
+            sawDownloading = sawDownloading || downloader.isDownloadingAll
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(downloader.isComplete)
+        #expect(downloader.coverState == .ready)
+        #expect(library.files.fileExists(folder: gallery.folderName, fileName: GalleryFileStore.coverFileName))
+        #expect(!sawDownloading)            // no 「下載中」
+        #expect(center.lastFinished == nil) // no 「下載完成囉」
+        center.detachReader(from: gallery)
+    }
+
+    @Test func resumingFetchesOnlyTheMissingCover() async throws {
+        let library = try makeLibrary()
+        let gallery = FixtureGalleryService.galleries[6]
+        for page in 1...gallery.fileCount {
+            try library.files.write(FixtureArt.page(gid: gallery.gid, page: page), folder: gallery.folderName, fileName: "\(gallery.gid)-\(page)")
+        }
+        library.markDownloaded(gallery)
+        let center = DownloadCenter(library: library) { FixtureGalleryService(latency: .milliseconds(5)) }
+
+        center.resume(gallery)
+        let downloader = try #require(center.downloaders[gallery.id])
+        for _ in 0..<200 where downloader.isDownloadingAll {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(downloader.isComplete)
+        #expect(!downloader.didFetchPages)
+        #expect(center.lastFinished == nil)
+        #expect(center.downloaders[gallery.id] == nil)
+    }
+
+    @Test func aCoverThatWontDownloadDoesNotBlockTheDownload() async throws {
+        let library = try makeLibrary()
+        let gallery = FixtureGalleryService.galleries[6]
+        let center = DownloadCenter(library: library) { FlakyService(failsCovers: true) }
+
+        center.startDownload(gallery)
+        let downloader = try #require(center.downloaders[gallery.id])
+        for _ in 0..<400 where downloader.isDownloadingAll {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(!downloader.isDownloadingAll)
+        #expect(downloader.arePagesComplete)
+        #expect(downloader.coverState == .failed)
+        #expect(!downloader.isComplete)
+        #expect(center.lastFinished == gallery) // the pages did finish
+    }
+
+    @Test func pagesThatKeepFailingEndTheDownload() async throws {
+        let library = try makeLibrary()
+        let gallery = FixtureGalleryService.galleries[6]
+        let center = DownloadCenter(library: library) { FlakyService(failingPage: 3) }
+
+        center.startDownload(gallery)
+        let downloader = try #require(center.downloaders[gallery.id])
+        for _ in 0..<400 where downloader.isDownloadingAll {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(!downloader.isDownloadingAll) // not stuck at 「下載中」
+        #expect(downloader.readyCount == gallery.fileCount - 1)
+        #expect(downloader.firstFailedPage == 2)
+        #expect(center.lastFinished == nil)
+    }
+
+    @Test func downloadingOfflineEndsTheDownload() async throws {
+        let library = try makeLibrary()
+        let gallery = FixtureGalleryService.galleries[6]
+        let center = DownloadCenter(library: library) { FlakyService(failsLinks: true, failsCovers: true) }
+
+        center.startDownload(gallery)
+        let downloader = try #require(center.downloaders[gallery.id])
+        for _ in 0..<400 where downloader.isDownloadingAll {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(!downloader.isDownloadingAll)
+        #expect(downloader.readyCount == 0)
+        #expect(downloader.pageStates.allSatisfy { $0 == .failed })
+    }
+
+    @Test func aSavedCoverIsShownWithoutTheNetwork() async throws {
+        let library = try makeLibrary()
+        let gallery = FixtureGalleryService.galleries[6]
+        let data = try #require(FixtureArt.cover(gid: gallery.gid).jpegData(compressionQuality: 0.8))
+        try library.files.write(data, folder: gallery.folderName, fileName: GalleryFileStore.coverFileName)
+
+        // An unreachable address: only the saved file can produce an image.
+        let offline = try #require(URL(string: "https://cover.invalid/\(gallery.gid).jpg"))
+        let image = await ImagePipeline().thumbnail(for: offline, localFile: library.files.coverURL(folder: gallery.folderName), maxPixelSize: 200)
+        #expect(image != nil)
+    }
+
+    private func makeLibrary() throws -> LibraryStore {
+        let root = URL.temporaryDirectory.appending(path: "dl-\(UUID().uuidString)", directoryHint: .isDirectory)
+        return LibraryStore(container: try LibraryContainer.make(inMemory: true), files: GalleryFileStore(root: root))
     }
 
     @Test func pagesOnDiskAreReadyWithoutNetwork() async throws {
@@ -246,6 +357,45 @@ struct LegacyDatabaseBuilder {
         let downloader = GalleryDownloader(gallery: gallery, service: FixtureGalleryService(latency: .milliseconds(1)), library: library)
         await downloader.waitUntilStarted()
         #expect(downloader.phase == .notFound)
+    }
+}
+
+/// Fixture content with chosen requests failing.
+struct FlakyService: GalleryService {
+    var failsLinks = false
+    var failsCovers = false
+    var failingPage: Int?
+    private let base = FixtureGalleryService(latency: .milliseconds(2))
+
+    init(failsLinks: Bool = false, failsCovers: Bool = false, failingPage: Int? = nil) {
+        self.failsLinks = failsLinks
+        self.failsCovers = failsCovers
+        self.failingPage = failingPage
+    }
+
+    var site: Site { base.site }
+
+    @concurrent func galleries(filter: SearchFilter, next: String?) async throws(SiteError) -> [GalleryInfo] {
+        try await base.galleries(filter: filter, next: next)
+    }
+
+    @concurrent func imagePageLinks(gid: String, token: String, index: Int) async throws(SiteError) -> [String] {
+        if failsLinks { throw .network }
+        return try await base.imagePageLinks(gid: gid, token: token, index: index)
+    }
+
+    @concurrent func imageURL(forImagePage pageURL: String) async throws(SiteError) -> URL {
+        try await base.imageURL(forImagePage: pageURL)
+    }
+
+    @concurrent func imageData(from url: URL) async throws(SiteError) -> Data {
+        if failsCovers, url.host() == "thumb" { throw .network }
+        if let failingPage, url.host() == "img", url.lastPathComponent == String(failingPage) { throw .network }
+        return try await base.imageData(from: url)
+    }
+
+    @concurrent func metadata(for references: [SiteParser.GalleryReference]) async throws(SiteError) -> [GalleryInfo] {
+        try await base.metadata(for: references)
     }
 }
 

@@ -2,6 +2,7 @@ import Foundation
 import ImageIO
 
 /// Downloaded images live in `Documents/<folderName>/<gid-page>`, exactly where 3.x put them.
+/// 4.0 also keeps the cover of a downloaded gallery there, as `cover`.
 public struct GalleryFileStore: Sendable {
     public let root: URL
 
@@ -11,12 +12,19 @@ public struct GalleryFileStore: Sendable {
 
     public static let documents = GalleryFileStore(root: .documentsDirectory)
 
+    /// File name of a downloaded gallery's cover. Pages are `{gid}-{page}`, so it can't collide.
+    public static let coverFileName = "cover"
+
     public func folderURL(_ folderName: String) -> URL {
         root.appending(path: folderName, directoryHint: .isDirectory)
     }
 
     public func fileURL(folder folderName: String, fileName: String) -> URL {
         folderURL(folderName).appending(path: fileName, directoryHint: .notDirectory)
+    }
+
+    public func coverURL(folder folderName: String) -> URL {
+        fileURL(folder: folderName, fileName: Self.coverFileName)
     }
 
     public func fileExists(folder folderName: String, fileName: String) -> Bool {

@@ -109,6 +109,11 @@ public struct FixtureGalleryService: GalleryService {
 
     @concurrent public func imageData(from url: URL) async throws(SiteError) -> Data {
         try await delay()
+        if url.host() == "thumb" {
+            // Covers: fixture://thumb/<gid>
+            guard let data = FixtureArt.cover(gid: url.lastPathComponent).jpegData(compressionQuality: 0.8) else { throw .parse }
+            return data
+        }
         let parts = url.pathComponents.filter { $0 != "/" }
         guard parts.count >= 2, let page = Int(parts[1]) else { throw .parse }
         return FixtureArt.page(gid: parts[0], page: page)

@@ -197,7 +197,7 @@ struct GalleryHeader: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
-            CoverImage(url: gallery.thumbURL)
+            CoverImage(gallery: gallery)
                 .frame(width: coverWidth, height: coverWidth * 1.4)
             VStack(alignment: .leading, spacing: 6) {
                 Text(gallery.bestTitle)

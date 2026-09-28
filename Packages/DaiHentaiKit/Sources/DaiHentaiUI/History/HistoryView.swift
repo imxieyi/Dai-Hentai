@@ -203,7 +203,7 @@ private struct ContinueShelf: View {
                             model.router.openReader(gallery, startPage: stored.lastReadPage)
                         } label: {
                             VStack(alignment: .leading, spacing: 6) {
-                                CoverImage(url: gallery.thumbURL)
+                                CoverImage(gallery: gallery)
                                     .frame(width: 110, height: 154)
                                     .overlay(alignment: .bottom) {
                                         ProgressView(value: Double(stored.lastReadPage), total: Double(max(stored.fileCount, stored.lastReadPage)))
