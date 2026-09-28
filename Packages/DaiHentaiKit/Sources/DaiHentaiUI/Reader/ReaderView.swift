@@ -362,12 +362,13 @@ private struct ReaderContent: View {
 
     // MARK: - Toolbar
 
+    /// Only downloading stays in the bar (「我要下載」, then its progress); share and delete live
+    /// in the ⋯ menu so the title gets the room.
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
-        ToolbarItemGroup(placement: .topBarTrailing) {
-            downloadButton
-            ShareLink(item: gallery.galleryURL(on: app.site), subject: Text(gallery.bestTitle), message: Text(gallery.bestTitle)) {
-                Label(.commonShare, systemImage: "square.and.arrow.up")
+        if !reader.isDownloaded || reader.downloader?.isDownloadingAll == true {
+            ToolbarItem(placement: .topBarTrailing) {
+                downloadButton
             }
         }
         ToolbarItem(placement: .topBarPinnedTrailing) {
@@ -384,6 +385,14 @@ private struct ReaderContent: View {
                 Divider()
                 Button(.readerInfo, systemImage: "info.circle") {
                     app.router.galleryCard = GalleryCardRoute(gallery: gallery, showsReadActions: false)
+                }
+                ShareLink(item: gallery.galleryURL(on: app.site), subject: Text(gallery.bestTitle), message: Text(gallery.bestTitle)) {
+                    Label(.commonShare, systemImage: "square.and.arrow.up")
+                }
+                if reader.isDownloaded {
+                    Divider()
+                    Button(.menuDeleteDownload, systemImage: "trash", role: .destructive) { isConfirmingDelete = true }
+                        .accessibilityIdentifier("deleteButton")
                 }
             } label: {
                 Label(.readerMore, systemImage: "ellipsis")
@@ -403,9 +412,6 @@ private struct ReaderContent: View {
             }
             .accessibilityLabel(.readerDownloadingAccessibility(downloader.progress.formatted(.percent.precision(.fractionLength(0)))))
             .accessibilityHint(Text(.readerDownloadingHint))
-        } else if reader.isDownloaded {
-            Button(.commonDelete, systemImage: "trash") { isConfirmingDelete = true }
-                .accessibilityIdentifier("deleteButton")
         } else {
             Button(.commonWantDownload, systemImage: "arrow.down.circle") { reader.download() }
                 .accessibilityIdentifier("readerDownloadButton")

@@ -210,6 +210,14 @@ final class SmokeUITests: XCTestCase {
         element("galleryCard").tap()
         pause(2.5)
         snap("36-reader-downloaded")
+        // Share and delete live in the ⋯ menu; a downloaded gallery's bar has only the menu.
+        XCTAssertFalse(element("readerDownloadButton").exists)
+        element("readerMoreMenu").tap()
+        pause()
+        XCTAssertTrue(element("deleteButton").exists)
+        snap("36-reader-downloaded-menu")
+        app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.08, dy: 0.5)).tap()
+        pause()
         app.navigationBars.buttons.firstMatch.tap()
         pause()
 
