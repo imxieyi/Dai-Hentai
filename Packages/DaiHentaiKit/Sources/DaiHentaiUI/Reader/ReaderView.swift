@@ -30,8 +30,8 @@ private struct ReaderContent: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var position = ScrollPosition(idType: Int.self)
     @State private var containerSize: CGSize = .zero
-    /// The scroll view's own visible size. It ignores the safe area, so this is the whole screen;
-    /// `containerSize` is only a fallback until it has been measured.
+    /// The scroll view's own visible size. It runs under the bars (vertical safe area) but not under
+    /// a landscape iPad's sidebar; `containerSize` is only a fallback until it has been measured.
     @State private var viewport: CGSize = .zero
     @State private var isConfirmingDelete = false
     @State private var isAskingPage = false
@@ -47,8 +47,11 @@ private struct ReaderContent: View {
         ZStack {
             readerBackground
                 .ignoresSafeArea()
-                // Pages ignore the safe area too, so measure the full screen.
+            // The same box the pages get: under the bars, beside the sidebar.
+            Color.clear
+                .ignoresSafeArea(edges: .vertical)
                 .onGeometryChange(for: CGSize.self) { $0.size } action: { containerSize = $0 }
+                .allowsHitTesting(false)
             pages
             overlays
         }
@@ -251,7 +254,7 @@ private struct ReaderContent: View {
         }
         .scrollPosition($position)
         .scrollIndicators(.hidden)
-        .ignoresSafeArea()
+        .ignoresSafeArea(edges: .vertical)
         .onScrollGeometryChange(for: CGSize.self) { $0.containerSize } action: { _, size in viewport = size }
         .task { await applyPendingScroll() }
         .onScrollPhaseChange { _, phase in
@@ -282,7 +285,7 @@ private struct ReaderContent: View {
         .scrollTargetBehavior(.paging)
         .scrollPosition($position)
         .scrollIndicators(.hidden)
-        .ignoresSafeArea()
+        .ignoresSafeArea(edges: .vertical)
         .onScrollGeometryChange(for: CGSize.self) { $0.containerSize } action: { _, size in viewport = size }
         .task(id: screen.width > 0) { await applyPendingScroll() }
         .onScrollGeometryChange(for: CGFloat.self) { geometry in
