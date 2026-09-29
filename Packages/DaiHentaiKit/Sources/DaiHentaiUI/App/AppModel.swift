@@ -14,6 +14,10 @@ public final class AppModel {
     let toasts = ToastCenter()
     let feed = GalleryFeed()
     let lock: AppLock
+    /// 歷史's and 下載's own search filters, applied to the library on the device. Unlike the list's
+    /// (which goes to the site), they last until the app quits.
+    var historyFilter = SearchFilter.default
+    var downloadsFilter = SearchFilter.default
 
     /// ExHentai cookies are present; the list and downloads use exhentai.org.
     private(set) var isLoggedIn: Bool

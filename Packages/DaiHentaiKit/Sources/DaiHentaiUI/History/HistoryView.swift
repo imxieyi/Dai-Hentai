@@ -10,27 +10,30 @@ struct HistoryTab: View {
     }
 }
 
-/// 歷史: galleries opened but not downloaded, newest first, grouped by day.
+/// 歷史: galleries opened but not downloaded, newest first, grouped by day, with the list's filters.
 struct HistoryView: View {
     @Environment(AppModel.self) private var model
     @Query(filter: #Predicate<StoredGallery> { !$0.isDownloaded }, sort: \StoredGallery.lastViewedAt, order: .reverse)
     private var histories: [StoredGallery]
-    @State private var searchText = ""
+    @State private var isSearchPresented = false
     @State private var isConfirmingClear = false
     @State private var clearProgress: (done: Int, total: Int)?
 
     var body: some View {
+        @Bindable var app = model
         let filtered = filteredHistories
         ScrollView {
             if histories.isEmpty {
                 KaomojiState(kaomoji: "O3O", title: .historyEmpty)
                     .padding(.top, 80)
-            } else if filtered.isEmpty {
-                ContentUnavailableView.search(text: searchText)
-                    .padding(.top, 60)
             } else {
                 LazyVStack(alignment: .leading, spacing: Metrics.cardSpacing, pinnedViews: []) {
-                    if searchText.isEmpty, !shelf.isEmpty {
+                    FilterSummaryRow(site: nil, filter: $app.historyFilter) { isSearchPresented = true }
+                    if filtered.isEmpty {
+                        NoMatchesState(filter: $app.historyFilter) { isSearchPresented = true }
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 40)
+                    } else if model.historyFilter.isDefault, !shelf.isEmpty {
                         ContinueShelf(galleries: shelf)
                     }
                     ForEach(sections(filtered), id: \.day) { section in
@@ -54,7 +57,9 @@ struct HistoryView: View {
         .swipeActionsContainer()
         .background(Color.canvas)
         .navigationTitle(.tabHistory)
-        .searchable(text: $searchText, prompt: Text(.historySearchPrompt))
+        .filterSearch($app.historyFilter, isPresented: $isSearchPresented, isAvailable: !histories.isEmpty, buttonIdentifier: "historySearchButton") {
+            histories.prefix(30).map(\.info)
+        }
         .toolbar {
             if !histories.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -77,12 +82,9 @@ struct HistoryView: View {
     }
 
     private var filteredHistories: [StoredGallery] {
-        let query = searchText.trimmingCharacters(in: .whitespaces).lowercased()
-        guard !query.isEmpty else { return histories }
-        return histories.filter { stored in
-            stored.title.lowercased().contains(query) || stored.titleJpn.lowercased().contains(query)
-                || stored.tags.contains { $0.lowercased().contains(query) }
-        }
+        let filter = model.historyFilter
+        guard !filter.isDefault else { return histories }
+        return histories.filter { filter.matches($0.info) }
     }
 
     /// Half-read galleries for the 繼續看 shelf.

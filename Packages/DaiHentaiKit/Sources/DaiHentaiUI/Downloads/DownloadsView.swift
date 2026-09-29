@@ -10,18 +10,21 @@ struct DownloadsTab: View {
     }
 }
 
-/// 下載: the two jobs for every download at once (「下載缺少的圖片」, 「升級成原圖」), running downloads,
-/// then everything downloaded, each with what it still lacks.
+/// 下載: the two jobs for the downloads shown (「下載缺少的圖片」, 「升級成原圖」), running downloads,
+/// then everything downloaded, each with what it still lacks. The list's filters narrow all of it.
 struct DownloadsView: View {
     @Environment(AppModel.self) private var model
     @Query(filter: #Predicate<StoredGallery> { $0.isDownloaded }, sort: \StoredGallery.lastViewedAt, order: .reverse)
     private var downloads: [StoredGallery]
     @State private var gaps: [String: DownloadGaps] = [:]
     @State private var totalBytes: Int64?
+    @State private var isSearchPresented = false
 
     var body: some View {
-        let active = downloads.filter { model.downloads.isDownloading($0.key) }
-        let finished = downloads.filter { !model.downloads.isDownloading($0.key) }
+        @Bindable var app = model
+        let shown = shownDownloads
+        let active = shown.filter { model.downloads.isDownloading($0.key) }
+        let finished = shown.filter { !model.downloads.isDownloading($0.key) }
         let lackingImages = finished.filter { gaps[$0.key]?.isMissingImages == true }
         let lackingOriginals = finished.filter { gaps[$0.key]?.hasReducedPages == true }
         ScrollView {
@@ -30,6 +33,7 @@ struct DownloadsView: View {
                     .padding(.top, 80)
             } else {
                 LazyVStack(alignment: .leading, spacing: Metrics.cardSpacing) {
+                    FilterSummaryRow(site: nil, filter: $app.downloadsFilter) { isSearchPresented = true }
                     summary
                     if model.downloads.batch != nil || !lackingImages.isEmpty || !lackingOriginals.isEmpty {
                         BatchPanel(
@@ -45,6 +49,11 @@ struct DownloadsView: View {
                         header(.commonDownloaded)
                         grid(finished)
                     }
+                    if shown.isEmpty {
+                        NoMatchesState(filter: $app.downloadsFilter) { isSearchPresented = true }
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 24)
+                    }
                     Text(.downloadsAwakeNote)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
@@ -57,7 +66,10 @@ struct DownloadsView: View {
         .swipeActionsContainer()
         .background(Color.canvas)
         .navigationTitle(.tabDownloads)
-        .task(id: downloads.map(\.key) + active.map(\.key)) {
+        .filterSearch($app.downloadsFilter, isPresented: $isSearchPresented, isAvailable: !downloads.isEmpty, buttonIdentifier: "downloadsSearchButton") {
+            downloads.prefix(30).map(\.info)
+        }
+        .task(id: downloads.map(\.key) + downloads.filter { model.downloads.isDownloading($0.key) }.map(\.key)) {
             await measure()
         }
         .onChange(of: model.downloads.lastFinished) {
@@ -65,6 +77,13 @@ struct DownloadsView: View {
         }
     }
 
+    private var shownDownloads: [StoredGallery] {
+        let filter = model.downloadsFilter
+        guard !filter.isDefault else { return downloads }
+        return downloads.filter { filter.matches($0.info) }
+    }
+
+    /// Every download's count and size, whatever the filters.
     private var summary: some View {
         HStack(spacing: 6) {
             Text(.downloadsCount(downloads.count))

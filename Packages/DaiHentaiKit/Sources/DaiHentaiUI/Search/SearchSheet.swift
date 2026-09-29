@@ -1,9 +1,13 @@
 import DaiHentaiCore
 import SwiftUI
 
-/// 搜尋: the old search screen's sections, in the old order.
+/// 搜尋: the old search screen's sections, in the old order. Edits the list's filter, or 歷史's or 下載's.
 struct SearchSheet: View {
-    @Environment(AppModel.self) private var model
+    @Binding var filter: SearchFilter
+    /// Galleries whose titles and tags are offered as hints: recently viewed ones for the list,
+    /// the ones being filtered for 歷史 and 下載.
+    let hintGalleries: [GalleryInfo]
+
     @Environment(\.dismiss) private var dismiss
     @State private var draft = SearchFilter.default
     @State private var selectedHints: [String] = []
@@ -176,17 +180,16 @@ struct SearchSheet: View {
     private func load() {
         guard !didLoad else { return }
         didLoad = true
-        draft = model.library.searchFilter
-        let recent = model.library.recentGalleries(limit: 30)
-        titleHints = SearchHints.recentTitleWords(from: recent, limit: 8)
-        tagHints = SearchHints.recentTags(from: recent, limit: 8)
+        draft = filter
+        titleHints = SearchHints.recentTitleWords(from: hintGalleries, limit: 8)
+        tagHints = SearchHints.recentTags(from: hintGalleries, limit: 8)
     }
 
     private func apply() {
         guard !draft.categories.isEmpty else { return }
-        var filter = draft
-        filter.keyword = effectiveKeyword
-        model.library.searchFilter = filter
+        var applied = draft
+        applied.keyword = effectiveKeyword
+        filter = applied
         dismiss()
     }
 }

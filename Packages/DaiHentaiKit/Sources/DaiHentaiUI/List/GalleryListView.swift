@@ -14,7 +14,6 @@ struct ListTab: View {
 struct GalleryListView: View {
     @Environment(AppModel.self) private var model
     @Query private var stored: [StoredGallery]
-    @Namespace private var searchZoom
 
     private var feed: GalleryFeed { model.feed }
     private var feedKey: GalleryFeed.Key { .init(site: model.site, filter: model.library.searchFilter) }
@@ -47,16 +46,9 @@ struct GalleryListView: View {
                         .accessibilityIdentifier("exLoginButton")
                 }
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(.commonSearch, systemImage: "magnifyingglass") { router.isSearchPresented = true }
-                    .badge(model.library.searchFilter.activeRefinementCount)
-                    .accessibilityIdentifier("searchButton")
-            }
-            .matchedTransitionSource(id: "search", in: searchZoom)
         }
-        .sheet(isPresented: $router.isSearchPresented) {
-            SearchSheet()
-                .navigationTransition(.zoom(sourceID: "search", in: searchZoom))
+        .filterSearch($library.searchFilter, isPresented: $router.isSearchPresented, buttonIdentifier: "searchButton") {
+            model.library.recentGalleries(limit: 30)
         }
     }
 
@@ -68,15 +60,8 @@ struct GalleryListView: View {
                 .padding(.top, 80)
                 .accessibilityIdentifier("listLoading")
         case .empty:
-            KaomojiState(kaomoji: "O3O", title: .listNoResults, message: model.library.searchFilter.isDefault ? nil : .listNoResultsHint) {
-                if !model.library.searchFilter.isDefault {
-                    Button(.listChangeFilters) { model.router.isSearchPresented = true }
-                        .buttonStyle(.borderedProminent)
-                    Button(.listClearFilters) { model.library.searchFilter = .default }
-                        .buttonStyle(.bordered)
-                }
-            }
-            .padding(.top, 40)
+            NoMatchesState(filter: Bindable(model.library).searchFilter) { model.router.isSearchPresented = true }
+                .padding(.top, 40)
         case .failed(let error):
             failure(error)
                 .padding(.top, 40)

@@ -1,22 +1,26 @@
 import DaiHentaiCore
 import SwiftUI
 
-/// The line above the list saying which site and which filters are in effect. Each filter chip has ✕.
+/// The line above a list saying which filters are in effect (and for the site's list, which site).
+/// Each filter chip has ✕.
 struct FilterSummaryRow: View {
-    let site: Site
+    /// `nil` for lists of the library on the device (歷史, 下載).
+    let site: Site?
     @Binding var filter: SearchFilter
     let openSearch: () -> Void
 
     var body: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 8) {
-                Label(String(site == .exHentai ? "ExHentai" : "E-Hentai"), systemImage: site == .exHentai ? "lock.shield" : "globe")
-                    .font(.footnote.weight(.semibold))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .foregroundStyle(site == .exHentai ? Color.moeAccent : .secondary)
-                    .background(Color(uiColor: .tertiarySystemFill), in: .capsule)
-                    .accessibilityLabel(site == .exHentai ? LocalizedStringResource.filterSiteEx : .filterSiteEh)
+                if let site {
+                    Label(String(site == .exHentai ? "ExHentai" : "E-Hentai"), systemImage: site == .exHentai ? "lock.shield" : "globe")
+                        .font(.footnote.weight(.semibold))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .foregroundStyle(site == .exHentai ? Color.moeAccent : .secondary)
+                        .background(Color(uiColor: .tertiarySystemFill), in: .capsule)
+                        .accessibilityLabel(site == .exHentai ? LocalizedStringResource.filterSiteEx : .filterSiteEh)
+                }
 
                 if filter.isDefault {
                     Button(action: openSearch) {

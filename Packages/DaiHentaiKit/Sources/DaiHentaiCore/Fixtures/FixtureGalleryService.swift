@@ -77,18 +77,7 @@ public struct FixtureGalleryService: GalleryService {
 
     @concurrent public func galleries(filter: SearchFilter, next: String?) async throws(SiteError) -> [GalleryInfo] {
         try await delay()
-        let keyword = filter.keyword.lowercased().trimmingCharacters(in: .whitespaces)
-        let matching = Self.galleries.filter { gallery in
-            guard let category = gallery.category, filter.categories.contains(category) else { return false }
-            if filter.minimumRating != .any, gallery.rating < Double(filter.minimumRating.rawValue + 1) { return false }
-            if filter.language == .chineseOnly, !gallery.tags.contains("language:chinese") { return false }
-            if filter.language == .originalOnly, gallery.tags.contains("language:translated") { return false }
-            guard !keyword.isEmpty else { return true }
-            let haystack = ([gallery.title, gallery.titleJpn] + gallery.tags).joined(separator: " ").lowercased()
-            return keyword.split(separator: " ").allSatisfy { term in
-                haystack.contains(term.trimmingCharacters(in: CharacterSet(charactersIn: "\"$")).replacingOccurrences(of: "$", with: ""))
-            }
-        }
+        let matching = Self.galleries.filter(filter.matches)
         let start = next.flatMap { gid in matching.firstIndex { $0.gid == gid }.map { $0 + 1 } } ?? 0
         return Array(matching.dropFirst(start).prefix(Self.perPage))
     }

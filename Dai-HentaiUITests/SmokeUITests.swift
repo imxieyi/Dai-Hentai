@@ -410,6 +410,60 @@ final class SmokeUITests: XCTestCase {
         snap("77-large-settings")
     }
 
+    // MARK: - 歷史 / 下載 filters
+
+    func testLibraryFilters() {
+        app.launch()
+        XCTAssertTrue(element("galleryCard").waitForExistence(timeout: 10))
+        let cards = app.descendants(matching: .any).matching(identifier: "galleryCard")
+
+        // 歷史 has the list's filters and search sheet, applied to what's on the device.
+        tab("歷史").tap()
+        pause(1.5)
+        XCTAssertTrue(element("filterDefaultChip").exists)
+        element("historySearchButton").tap()
+        let field = element("keywordField")
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap()
+        field.typeText("winter")
+        pause()
+        snap("52-history-search")
+        element("searchConfirmButton").tap()
+        pause(1.2)
+        XCTAssertEqual(cards.count, 1) // Winter Onsen Trip
+        XCTAssertFalse(element("filterDefaultChip").exists)
+        snap("53-history-filtered")
+
+        // Nothing left: the same ways out as the list.
+        element("historySearchButton").tap()
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.clearAndType("nothing like this")
+        element("searchConfirmButton").tap()
+        pause(1.2)
+        XCTAssertEqual(cards.count, 0)
+        XCTAssertTrue(element("clearFiltersButton").exists)
+        snap("54-history-no-matches")
+        element("clearFiltersButton").tap()
+        pause()
+        XCTAssertTrue(element("filterDefaultChip").exists)
+        XCTAssertGreaterThan(cards.count, 2)
+
+        // 下載 too, and its jobs only count the downloads shown.
+        tab("下載").tap()
+        pause(1.5)
+        XCTAssertTrue(element("upgradeOriginalsButton").exists)
+        element("downloadsSearchButton").tap()
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap()
+        field.typeText("cherry")
+        element("searchConfirmButton").tap()
+        pause(1.2)
+        XCTAssertEqual(cards.count, 1) // Cherry Blossom Letters, in original quality but without a cover
+        XCTAssertTrue(element("downloadMissingButton").exists)
+        XCTAssertFalse(element("upgradeOriginalsButton").exists)
+        snap("55-downloads-filtered")
+    }
+
     func testEmptyLibrary() {
         app.launchArguments += ["-DemoEmptyLibrary"]
         app.launch()

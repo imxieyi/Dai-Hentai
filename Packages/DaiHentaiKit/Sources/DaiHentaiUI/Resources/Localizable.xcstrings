@@ -2722,35 +2722,6 @@
         }
       }
     },
-    "History.SearchPrompt" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search History"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "読んだ作品を検索"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "搜索看过的作品"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "搜尋看過的作品"
-          }
-        }
-      }
-    },
     "History.ThisWeek" : {
       "extractionState" : "manual",
       "localizations" : {

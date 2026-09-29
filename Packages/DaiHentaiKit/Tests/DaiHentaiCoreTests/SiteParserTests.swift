@@ -194,3 +194,52 @@ func fixtureText(_ name: String) throws -> String {
         #expect(TagTranslator(dictionary: ["glasses": "眼镜"], display: .hidden).translate("glasses") == nil)
     }
 }
+
+@Suite struct LocalSearchTests {
+    let onsen = GalleryInfo(gid: "1", token: "a", title: "[Moe Studio] Winter Onsen Trip", titleJpn: "[萌えスタジオ] 冬の温泉旅行", categoryName: "Doujinshi", rating: 4.2,
+                            tags: ["language:chinese", "language:translated", "female:big breasts", "other:full color", "artist:daidouji"])
+    let manga = GalleryInfo(gid: "2", token: "b", title: "Robot Garden", categoryName: "Manga", rating: 2.6, tags: ["language:japanese", "parody:original"])
+
+    private func matching(_ filter: SearchFilter) -> [String] {
+        [onsen, manga].filter(filter.matches).map(\.gid)
+    }
+
+    @Test func wordsMatchEitherTitleOrATag() {
+        #expect(matching(SearchFilter()) == ["1", "2"])
+        #expect(matching(SearchFilter(keyword: "winter")) == ["1"])
+        #expect(matching(SearchFilter(keyword: "温泉")) == ["1"])
+        #expect(matching(SearchFilter(keyword: "daidouji")) == ["1"])
+        #expect(matching(SearchFilter(keyword: "WINTER robot")) == [])       // every term has to hold
+        #expect(matching(SearchFilter(keyword: "\"onsen trip\"")) == ["1"])
+        #expect(matching(SearchFilter(keyword: "\"trip onsen\"")) == [])
+    }
+
+    @Test func tagSyntaxFollowsTheSite() {
+        #expect(matching(SearchFilter(keyword: "female:\"big breasts$\"")) == ["1"])
+        #expect(matching(SearchFilter(keyword: "female:\"big$\"")) == [])       // `$` wants the whole tag
+        #expect(matching(SearchFilter(keyword: "female:big")) == ["1"])
+        #expect(matching(SearchFilter(keyword: "f:\"big breasts$\"")) == ["1"]) // short namespaces
+        #expect(matching(SearchFilter(keyword: "l:japanese")) == ["2"])
+        #expect(matching(SearchFilter(keyword: "-translated")) == ["2"])
+        #expect(matching(SearchFilter(keyword: "original$")) == ["2"])
+        // Hints picked in the search sheet come out in this syntax.
+        #expect(matching(SearchFilter(keyword: SearchHints.keyword(from: ["female:big breasts", "full color"]))) == ["1"])
+    }
+
+    @Test func refinementsApplyLikeOnTheSite() {
+        #expect(matching(SearchFilter(minimumRating: .four)) == ["1"])
+        #expect(matching(SearchFilter(language: .chineseOnly)) == ["1"])
+        #expect(matching(SearchFilter(language: .originalOnly)) == ["2"])
+        #expect(matching(SearchFilter(categories: [.manga])) == ["2"])
+        let unknown = GalleryInfo(gid: "3", token: "c", title: "Old", categoryName: "Something Else")
+        #expect(SearchFilter().matches(unknown))
+        #expect(!SearchFilter(categories: [.manga]).matches(unknown))
+    }
+
+    @Test func oldTagsWithoutNamespacesStillMatch() {
+        let legacy = GalleryInfo(gid: "4", token: "d", title: "Legacy", tags: ["chinese", "big breasts"])
+        #expect(SearchFilter(keyword: "language:chinese").matches(legacy))
+        #expect(SearchFilter(keyword: "female:\"big breasts$\"").matches(legacy))
+        #expect(!SearchFilter(keyword: "other:chinese").matches(GalleryInfo(gid: "5", token: "e", tags: ["language:chinese"])))
+    }
+}
