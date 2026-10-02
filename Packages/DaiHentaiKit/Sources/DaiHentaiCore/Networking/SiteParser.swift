@@ -87,6 +87,16 @@ public enum SiteParser {
         return path.hasSuffix("/509.gif") || path.hasSuffix("/509s.gif")
     }
 
+    /// What a short text answer to an image request (usually an original's link) means:
+    /// "You have reached the image limit, and do not have sufficient GP to buy a download quota." is the
+    /// whole account, "Downloading original files of this gallery [during peak hours] requires GP, and you do
+    /// not have enough." is this gallery only.
+    public static func imageRefusal(in text: String) -> SiteError? {
+        if text.contains("reached the image limit") { return .rateLimited }
+        if text.contains("requires GP") { return .originalsNeedGP }
+        return nil
+    }
+
     /// `/fullimg/{gid}/{page}/{key}/{name}` (older pages: `fullimg.php?...`).
     private static func originalLink(in document: Document) throws -> String? {
         try nonEmpty(document.select("a[href*=fullimg]").first()?.attr("href"))

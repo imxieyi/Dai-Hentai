@@ -84,18 +84,29 @@ private struct MainTabs: View {
         .onChange(of: model.downloads.lastNotice) { _, notice in
             guard let notice else { return }
             switch notice.kind {
-            case .finishedWithoutOriginals(let gallery):
-                model.toasts.show(.toastDownloadFinishedWithoutOriginals(gallery.bestTitle), kaomoji: "O口O", duration: .seconds(3.5))
-            case .originalsRefused:
-                // Logged out, originals need a login; logged in, the likely reason is GP or image limits.
-                model.toasts.show(model.isLoggedIn ? .toastOriginalsOutOfLimits : .toastOriginalsNeedLogin, kaomoji: "O口O", duration: .seconds(3.5))
+            case .finishedWithoutOriginals(let gallery, let refusal):
+                let message: LocalizedStringResource = refusal == .needsGP ? .toastDownloadFinishedOriginalsNeedGP(gallery.bestTitle) : .toastDownloadFinishedWithoutOriginals(gallery.bestTitle)
+                model.toasts.show(message, kaomoji: "O口O", duration: .seconds(3.5))
+            case .originalsRefused(let refusal):
+                model.toasts.show(message(for: refusal), kaomoji: "O口O", duration: .seconds(3.5))
             case .rateLimited:
                 model.toasts.show(.toastRateLimited, kaomoji: "O口O", duration: .seconds(4))
-            case .batchFinished(let work, let originalsRefused):
+            case .batchFinished(let work, let refused):
+                // "Requires GP" is per gallery and gets a count; any other refusal covers the whole batch.
+                let needGP = refused[.needsGP] ?? 0
+                let otherRefusal = refused.keys.first { $0 != .needsGP }
                 if work == .originals {
-                    model.toasts.show(.toastUpgradedToOriginals, kaomoji: "O3Ob", symbol: "checkmark.circle.fill")
-                } else if originalsRefused {
+                    if needGP > 0 {
+                        model.toasts.show(.toastUpgradedExceptNeedGP(needGP), kaomoji: "O口O", duration: .seconds(3.5))
+                    } else if let otherRefusal {
+                        model.toasts.show(message(for: otherRefusal), kaomoji: "O口O", duration: .seconds(3.5))
+                    } else {
+                        model.toasts.show(.toastUpgradedToOriginals, kaomoji: "O3Ob", symbol: "checkmark.circle.fill")
+                    }
+                } else if otherRefusal != nil {
                     model.toasts.show(.toastMissingImagesDownloadedWithoutOriginals, kaomoji: "O口O", duration: .seconds(3.5))
+                } else if needGP > 0 {
+                    model.toasts.show(.toastMissingImagesDownloadedExceptNeedGP(needGP), kaomoji: "O口O", duration: .seconds(3.5))
                 } else {
                     model.toasts.show(.toastMissingImagesDownloaded, kaomoji: "O3Ob", symbol: "checkmark.circle.fill")
                 }
@@ -103,6 +114,15 @@ private struct MainTabs: View {
         }
         .sensoryFeedback(.success, trigger: model.downloads.lastFinished)
         .sensoryFeedback(.start, trigger: model.downloads.activeDownloads.count) { old, new in new > old }
+    }
+
+    /// Why originals didn't come. An unexplained refusal is a missing login when logged out; logged in, likely GP or image limits.
+    private func message(for refusal: GalleryDownloader.OriginalsRefusal) -> LocalizedStringResource {
+        switch refusal {
+        case .needsLogin: .toastOriginalsNeedLogin
+        case .needsGP: .toastOriginalsNeedGP
+        case .other: model.isLoggedIn ? .toastOriginalsOutOfLimits : .toastOriginalsNeedLogin
+        }
     }
 
     /// 「下載中」 wins over 「繼續看」. Hidden while reading.

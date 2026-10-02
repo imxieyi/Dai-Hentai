@@ -70,7 +70,13 @@ public struct GalleryInfo: Hashable, Codable, Sendable, Identifiable {
         return "\(prefix)-\(gid)"
     }
 
-    public var thumbURL: URL? { URL(string: thumb) }
+    /// The cover thumbnail. ExHentai's own `/t/` path (what its API used to hand out, and what 3.x saved)
+    /// answers 404 now; the same files are on `ehgt.org`.
+    public var thumbURL: URL? {
+        guard let url = URL(string: thumb) else { return nil }
+        guard let host = url.host(), host == "exhentai.org" || host.hasSuffix(".exhentai.org"), url.path().hasPrefix("/t/") else { return url }
+        return URL(string: "https://ehgt.org\(url.path(percentEncoded: true))")
+    }
 
     public var engTitleWords: [String] { Self.splitTitle(title) }
     public var jpnTitleWords: [String] { Self.splitTitle(titleJpn) }

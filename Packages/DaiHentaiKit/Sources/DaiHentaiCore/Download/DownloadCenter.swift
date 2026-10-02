@@ -20,14 +20,15 @@ public final class DownloadCenter {
 
     public struct Notice: Equatable, Sendable {
         public enum Kind: Equatable, Sendable {
-            /// A download finished, but the site refused the originals (usually: not logged in).
-            case finishedWithoutOriginals(GalleryInfo)
-            /// Replacing pages with originals stopped: the site refused them (usually: not logged in).
-            case originalsRefused
+            /// A download finished, but the site refused the originals.
+            case finishedWithoutOriginals(GalleryInfo, GalleryDownloader.OriginalsRefusal)
+            /// Replacing pages with originals stopped: the site refused them.
+            case originalsRefused(GalleryDownloader.OriginalsRefusal)
             /// The image limits ran out, so every download stopped.
             case rateLimited
-            /// A batch went through every gallery. With `originalsRefused`, missing pages came as the site shows them.
-            case batchFinished(GalleryDownloader.Work, originalsRefused: Bool)
+            /// A batch went through every gallery. `refusedOriginals` counts the galleries the site refused
+            /// originals, by reason; their missing pages came as the site shows them.
+            case batchFinished(GalleryDownloader.Work, refusedOriginals: [GalleryDownloader.OriginalsRefusal: Int])
         }
 
         public let id = UUID()
@@ -43,7 +44,7 @@ public final class DownloadCenter {
     }
 
     private var batchQueue: [GalleryInfo] = []
-    private var batchRefusedOriginals = false
+    private var batchRefusals: [GalleryDownloader.OriginalsRefusal: Int] = [:]
     private let library: LibraryStore
     private var serviceProvider: @MainActor () -> any GalleryService
 
@@ -144,7 +145,7 @@ public final class DownloadCenter {
         guard batch == nil, !galleries.isEmpty else { return }
         batch = Batch(work: work, total: galleries.count)
         batchQueue = galleries
-        batchRefusedOriginals = false
+        batchRefusals = [:]
         startNextInBatch()
     }
 
@@ -170,12 +171,14 @@ public final class DownloadCenter {
             }
             batch.current = next
             self.batch = batch
-            downloader(for: next).downloadAll(batch.work, asksForOriginals: !batchRefusedOriginals)
+            // Without a login, no gallery gets originals. "Requires GP" is about one gallery: the next may be free.
+            let asksForOriginals = batchRefusals[.needsLogin] == nil
+            downloader(for: next).downloadAll(batch.work, asksForOriginals: asksForOriginals)
             updateIdleTimer()
             return
         }
         self.batch = nil
-        lastNotice = Notice(kind: .batchFinished(batch.work, originalsRefused: batchRefusedOriginals))
+        lastNotice = Notice(kind: .batchFinished(batch.work, refusedOriginals: batchRefusals))
     }
 
     /// The batch's current gallery is done (or gone): on to the next one.
@@ -228,12 +231,14 @@ public final class DownloadCenter {
             self.updateIdleTimer()
             if let batch = self.batch, batch.current?.id == gallery.id {
                 // A batch tells the user once, at the end.
-                self.batchRefusedOriginals = self.batchRefusedOriginals || downloader.wereOriginalsRefused
-                if batch.work == .originals, downloader.wereOriginalsRefused {
+                if let refusal = downloader.originalsRefusal {
+                    self.batchRefusals[refusal, default: 0] += 1
+                }
+                if batch.work == .originals, downloader.originalsRefusal == .needsLogin {
                     // The next gallery wouldn't get originals either.
                     self.batch = nil
                     self.batchQueue.removeAll()
-                    self.lastNotice = Notice(kind: .originalsRefused)
+                    self.lastNotice = Notice(kind: .originalsRefused(.needsLogin))
                 } else {
                     self.advanceBatch(past: gallery)
                 }
@@ -241,8 +246,8 @@ public final class DownloadCenter {
             }
             // Announce new pages only: not a cover top-up, and not a download that gave up.
             let didFinishPages = downloader.didFetchPages && downloader.arePagesComplete
-            if downloader.wereOriginalsRefused {
-                self.lastNotice = Notice(kind: didFinishPages ? .finishedWithoutOriginals(gallery) : .originalsRefused)
+            if let refusal = downloader.originalsRefusal {
+                self.lastNotice = Notice(kind: didFinishPages ? .finishedWithoutOriginals(gallery, refusal) : .originalsRefused(refusal))
             } else if didFinishPages {
                 self.lastFinished = gallery
             }

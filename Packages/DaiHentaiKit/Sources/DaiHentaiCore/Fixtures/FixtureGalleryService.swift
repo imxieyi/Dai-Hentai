@@ -8,10 +8,10 @@ public struct FixtureGalleryService: GalleryService {
     public let site: Site
     /// Simulated latency per request.
     public var latency: Duration
-    /// Answers originals with a login page, like the site does for logged-out users.
-    public var refusesOriginals: Bool
+    /// Originals come back as this refusal instead (`.loginRequired`, `.originalsNeedGP`), like the site's.
+    public var refusesOriginals: SiteError?
 
-    public init(site: Site = .eHentai, latency: Duration = .milliseconds(120), refusesOriginals: Bool = false) {
+    public init(site: Site = .eHentai, latency: Duration = .milliseconds(120), refusesOriginals: SiteError? = nil) {
         self.site = site
         self.latency = latency
         self.refusesOriginals = refusesOriginals
@@ -91,6 +91,8 @@ public struct FixtureGalleryService: GalleryService {
         try await delay()
         if gid == Self.missingGalleryID { throw .galleryNotFound }
         let count = Self.galleries.first { $0.gid == gid }?.fileCount ?? 20
+        // Past the end, the site shows the last page.
+        let index = min(index, max(count - 1, 0) / Self.linksPerPage)
         let pages = (index * Self.linksPerPage)..<min((index + 1) * Self.linksPerPage, count)
         // Like the site's, image keys are the start of the original file's SHA-1.
         let keys = await withTaskGroup(of: (Int, String).self) { group in
@@ -119,7 +121,7 @@ public struct FixtureGalleryService: GalleryService {
         guard parts.count >= 2, let page = Int(parts[1]) else { throw .parse }
         if url.host() == "original" {
             // Originals: fixture://original/<gid>/<page>
-            if refusesOriginals { throw .loginRequired }
+            if let refusesOriginals { throw refusesOriginals }
             return FixtureArt.original(gid: parts[0], page: page)
         }
         return FixtureArt.page(gid: parts[0], page: page)

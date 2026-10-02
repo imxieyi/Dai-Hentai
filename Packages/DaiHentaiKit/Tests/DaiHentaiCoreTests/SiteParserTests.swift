@@ -53,10 +53,10 @@ func fixtureText(_ name: String) throws -> String {
     }
 
     @Test func imageResponsesThatArentImagesAreErrors() throws {
-        func check(_ url: String, status: Int = 200, type: String = "image/jpeg") -> SiteError? {
+        func check(_ url: String, status: Int = 200, type: String = "image/jpeg", body: String? = nil) -> SiteError? {
             let response = HTTPURLResponse(url: URL(string: url)!, statusCode: status, httpVersion: nil, headerFields: ["Content-Type": type])!
             do {
-                try LiveGalleryService.check(imageResponse: response, data: Data([1, 2, 3]))
+                try LiveGalleryService.check(imageResponse: response, data: body.map { Data($0.utf8) } ?? Data([1, 2, 3]))
                 return nil
             } catch {
                 return error
@@ -67,6 +67,11 @@ func fixtureText(_ name: String) throws -> String {
         #expect(check("https://ehgt.org/g/509.gif", type: "image/gif") == .rateLimited)
         #expect(check("https://e-hentai.org/bounce_login.php?b=ds&bt=7-1-1-key", type: "text/html") == .loginRequired)
         #expect(check("https://e-hentai.org/fullimg/1/1/key/001.jpg", type: "text/html") == .parse)
+        // What the site answers an original's link with, word for word.
+        let fullimg = "https://exhentai.org/fullimg/1/1/key/001.jpg"
+        #expect(check(fullimg, type: "text/html", body: "Downloading original files of this gallery requires GP, and you do not have enough.") == .originalsNeedGP)
+        #expect(check(fullimg, type: "text/html", body: "Downloading original files of this gallery during peak hours requires GP, and you do not have enough.") == .originalsNeedGP)
+        #expect(check(fullimg, type: "text/html", body: "You have reached the image limit, and do not have sufficient GP to buy a download quota.") == .rateLimited)
         #expect(check("https://example.hath.network/h/abc/001.jpg", status: 404) == .network)
     }
 
@@ -126,6 +131,16 @@ func fixtureText(_ name: String) throws -> String {
 }
 
 @Suite struct GalleryInfoTests {
+    @Test func exHentaiThumbnailsComeFromEhgt() {
+        func thumb(_ thumb: String) -> String? { GalleryInfo(gid: "1", token: "t", thumb: thumb).thumbURL?.absoluteString }
+        // exhentai.org/t/ answers 404 now; the same files are on ehgt.org.
+        #expect(thumb("https://exhentai.org/t/9f/10/9f10d9e32b-151399-560-420-jpg_l.jpg") == "https://ehgt.org/t/9f/10/9f10d9e32b-151399-560-420-jpg_l.jpg")
+        #expect(thumb("https://s.exhentai.org/t/9f/10/9f10d9e32b-151399-560-420-jpg_l.jpg") == "https://ehgt.org/t/9f/10/9f10d9e32b-151399-560-420-jpg_l.jpg")
+        #expect(thumb("https://ehgt.org/w/01/023/64289-d8s9v4ac.webp") == "https://ehgt.org/w/01/023/64289-d8s9v4ac.webp")
+        #expect(thumb("fixture://thumb/3000000") == "fixture://thumb/3000000")
+        #expect(thumb("") == nil)
+    }
+
     @Test func folderNameMatchesVersion3() {
         // 3.x: [[bestTitle componentsSeparatedByString:@"/"] componentsJoinedByString:@"-"]
         let info = GalleryInfo(gid: "1", token: "t", title: "A/B", titleJpn: "日本語/タイトル/です")

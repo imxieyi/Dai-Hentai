@@ -8,6 +8,9 @@ public enum SiteError: Error, Sendable, Equatable {
     case rateLimited
     /// Originals are only for logged-in users (`fullimg` bounces to `bounce_login.php`).
     case loginRequired
+    /// This gallery's originals cost GP (older galleries, or any during peak hours), and the account doesn't
+    /// have enough. Other galleries' originals may still be free.
+    case originalsNeedGP
 }
 
 /// Everything the app needs from the site. `LiveGalleryService` talks to e-/exhentai;
@@ -24,8 +27,8 @@ public protocol GalleryService: Sendable {
     /// Resolves an image page (`/s/{imgkey}/{gid}-{page}`) to its image, and its original file when that isn't it.
     @concurrent func imageSource(forImagePage pageURL: String) async throws(SiteError) -> PageImageSource
 
-    /// Downloads image bytes. Throws `.rateLimited` for the image-limits placeholder and `.loginRequired`
-    /// when an original needs a login, rather than returning them as images.
+    /// Downloads image bytes. Throws `.rateLimited` for the image-limits placeholder, and `.loginRequired` or
+    /// `.originalsNeedGP` when the site won't hand out an original, rather than returning them as images.
     @concurrent func imageData(from url: URL) async throws(SiteError) -> Data
 
     /// Fetches metadata for specific galleries (used by the API diagnostic).
@@ -131,7 +134,7 @@ public struct LiveGalleryService: GalleryService {
     }
 
     /// Turns what the site sends instead of an image into an error: the image-limits placeholder (HTTP 509, or a
-    /// redirect to `509.gif`), the login bounce for originals, or any other page.
+    /// redirect to `509.gif`), the login bounce for originals, the site saying an original costs GP, or any other page.
     static func check(imageResponse response: URLResponse, data: Data) throws(SiteError) {
         let http = response as? HTTPURLResponse
         if http?.statusCode == 509 || http?.statusCode == 429 { throw .rateLimited }
@@ -139,8 +142,10 @@ public struct LiveGalleryService: GalleryService {
             if SiteParser.isRateLimitImage(url.absoluteString) { throw .rateLimited }
             if url.path().contains("bounce_login") { throw .loginRequired }
         }
+        let isText = response.mimeType?.hasPrefix("text/") == true
+        if isText, let refusal = SiteParser.imageRefusal(in: String(decoding: data.prefix(2048), as: UTF8.self)) { throw refusal }
         guard http.map({ (200..<300).contains($0.statusCode) }) ?? true, !data.isEmpty else { throw .network }
-        if response.mimeType?.hasPrefix("text/") == true { throw .parse }
+        if isText { throw .parse }
     }
 
     // MARK: - Transport

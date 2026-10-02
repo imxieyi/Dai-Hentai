@@ -50,6 +50,16 @@ public final class GalleryDownloader {
         public static let originals = Work(rawValue: 1 << 1)
     }
 
+    /// Why the site wouldn't hand out originals.
+    public enum OriginalsRefusal: Hashable, Sendable {
+        /// Originals need a login. Holds for every gallery.
+        case needsLogin
+        /// This gallery's originals cost GP (older galleries, or any during peak hours), and the account is short.
+        case needsGP
+        /// Something else came back instead of the file.
+        case other
+    }
+
     public enum CoverState: Equatable, Sendable {
         /// The disk hasn't been checked yet.
         case unknown
@@ -75,9 +85,10 @@ public final class GalleryDownloader {
     public private(set) var pagesToReplace: Set<Int> = []
     /// Bumped when a page's file is replaced while it stays readable, so readers decode it again.
     public private(set) var pageRevisions: [Int: Int] = [:]
-    /// The site answered an original's link with something else during this download (usually: not logged
-    /// in). Missing pages carry on as the site shows them; replacing pages stops.
-    public private(set) var wereOriginalsRefused = false
+    /// The site answered an original's link with something else during this download (a login page, or
+    /// "requires GP"). Missing pages carry on as the site shows them; replacing pages stops.
+    public private(set) var originalsRefusal: OriginalsRefusal?
+    public var wereOriginalsRefused: Bool { originalsRefusal != nil }
     /// The image limits ran out, which stopped everything.
     public private(set) var didHitRateLimit = false
 
@@ -116,6 +127,9 @@ public final class GalleryDownloader {
     private var coverTask: Task<Void, Never>?
     private var coverAttempts = 0
     private var isRetryingFirstLinkPage = false
+    /// Saved link pages turned out to disagree with the site, so they're being fetched again (once per downloader).
+    private var isRefreshingLinks = false
+    private var didRefreshLinks = false
     private let maxConcurrentDownloads = 3
     private let maxConcurrentLinkFetches = 2
 
@@ -168,12 +182,12 @@ public final class GalleryDownloader {
     /// - `.originals` (「升級成原圖」): reduced pages on disk (from online reading, 3.x, or a refused
     ///   original) are replaced with originals. They stay readable meanwhile.
     ///
-    /// 「我要下載」 does both. `asksForOriginals: false` skips originals for missing pages (they were
-    /// just refused for another gallery).
+    /// 「我要下載」 does both. `asksForOriginals: false` skips originals for missing pages (another gallery
+    /// was just refused them for want of a login).
     public func downloadAll(_ work: Work = [.missing, .originals], asksForOriginals: Bool = true) {
         guard !work.isEmpty else { return }
         self.work.formUnion(work)
-        wereOriginalsRefused = !asksForOriginals
+        originalsRefusal = asksForOriginals ? nil : .needsLogin
         didHitRateLimit = false
         start()
         queueRemainingPages()
@@ -207,8 +221,8 @@ public final class GalleryDownloader {
     }
 
     /// The site won't hand out originals right now: stop asking until the next full download.
-    private func refuseOriginals() {
-        wereOriginalsRefused = true
+    private func refuseOriginals(_ reason: OriginalsRefusal) {
+        if originalsRefusal == nil || reason == .needsLogin { originalsRefusal = reason }
         let waiting = pagesToReplace.filter { downloadTasks[$0] == nil }
         pagesToReplace.subtract(waiting)
         queue.removeAll { waiting.contains($0) }
@@ -343,7 +357,7 @@ public final class GalleryDownloader {
     }
 
     @discardableResult
-    private func loadLinkPage(_ linkPage: Int) async -> LinkOutcome {
+    private func loadLinkPage(_ linkPage: Int, ignoringCache: Bool = false) async -> LinkOutcome {
         if loadedLinkPages.contains(linkPage) { return .success }
         if let running = linkTasks[linkPage] {
             await running.value
@@ -352,7 +366,7 @@ public final class GalleryDownloader {
 
         var outcome = LinkOutcome.failure(.network)
         let task = Task { [gallery, service, library] in
-            if let cached = library.pageList(gid: gallery.gid, token: gallery.token, index: linkPage), !cached.isEmpty {
+            if !ignoringCache, let cached = library.pageList(gid: gallery.gid, token: gallery.token, index: linkPage), !cached.isEmpty {
                 self.apply(links: cached, linkPage: linkPage)
                 outcome = .success
                 return
@@ -425,12 +439,19 @@ public final class GalleryDownloader {
                 }
             } else if let linkPage = linkPage(forPage: page) {
                 if loadedLinkPages.contains(linkPage) {
+                    if !didRefreshLinks {
+                        // The saved link pages may hold a different number of links each (3.x saved 20 a page, and
+                        // the site's thumbnail settings change): ask the site before believing the page is gone.
+                        refreshLinks()
+                        index += 1
+                        continue
+                    }
                     // The site lists fewer pages than the gallery claims.
                     giveUp(page)
                     queue.remove(at: index)
                     continue
                 }
-                if linkTasks[linkPage] == nil, linkTasks.count < maxConcurrentLinkFetches {
+                if !isRefreshingLinks, linkTasks[linkPage] == nil, linkTasks.count < maxConcurrentLinkFetches {
                     Task {
                         let outcome = await self.loadLinkPage(linkPage)
                         if case .failure = outcome { self.failPages(onLinkPage: linkPage) }
@@ -441,7 +462,7 @@ public final class GalleryDownloader {
                 index += 1
             } else {
                 // The first link page failed (offline?): try it once more, then give up on what's queued.
-                if phase != .loading, !isRetryingFirstLinkPage {
+                if phase != .loading, !isRetryingFirstLinkPage, !isRefreshingLinks {
                     isRetryingFirstLinkPage = true
                     Task {
                         let outcome = await self.loadLinkPage(0)
@@ -453,6 +474,26 @@ public final class GalleryDownloader {
                 }
                 index += 1
             }
+        }
+    }
+
+    /// Fetches the first link page from the site again, and forgets the saved ones after it, so link pages are
+    /// counted the way the site lists them now. Links already found stay: each one names its page.
+    private func refreshLinks() {
+        didRefreshLinks = true
+        isRefreshingLinks = true
+        loadedLinkPages.removeAll()
+        linksPerPage = nil
+        Task {
+            let outcome = await self.loadLinkPage(0, ignoringCache: true)
+            self.isRefreshingLinks = false
+            if case .success = outcome {
+                self.library.deletePageLists(gid: self.gallery.gid, token: self.gallery.token, after: 0)
+            } else {
+                self.failQueuedPages()
+            }
+            self.pump()
+            self.settle()
         }
     }
 
@@ -491,7 +532,15 @@ public final class GalleryDownloader {
         let service = service, files = files, folder = folder, fileName = fileName(forPage: index), wantsOriginal = savesOriginals
         downloadTasks[index] = Task {
             let outcome = await Self.fetchPage(link: link, wantsOriginal: wantsOriginal, service: service, files: files, folder: folder, fileName: fileName)
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled else {
+                // Stopped while the page was being saved: it's on disk all the same.
+                if case .saved(let fetched) = outcome, !self.pageStates[index].isReady {
+                    self.readyCount += 1
+                    self.pageStates[index] = .ready(fetched.size)
+                    if fetched.isOriginal { self.originalPages.insert(index) }
+                }
+                return
+            }
             self.downloadTasks[index] = nil
             if case .rateLimited = outcome {
                 self.pageStates[index] = .failed
@@ -507,8 +556,8 @@ public final class GalleryDownloader {
                 } else {
                     self.originalPages.remove(index)
                 }
-                if fetched.wasOriginalRefused {
-                    self.refuseOriginals()
+                if let refusal = fetched.originalRefusal {
+                    self.refuseOriginals(refusal)
                 } else if !fetched.isOriginal, !fetched.askedForOriginal {
                     // Fetched for reading just before 「我要下載」.
                     self.queueReplacements([index])
@@ -542,9 +591,9 @@ public final class GalleryDownloader {
                     self.pageStates[index] = .ready(size)
                     self.pageRevisions[index, default: 0] += 1
                 }
-            case .refused:
+            case .refused(let reason):
                 self.pagesToReplace.remove(index)
-                self.refuseOriginals()
+                self.refuseOriginals(reason)
             case .rateLimited:
                 self.hitRateLimit()
                 return
@@ -569,7 +618,7 @@ public final class GalleryDownloader {
         /// The original was asked for: this is the best this download gets, even if the fetch fell back.
         var askedForOriginal: Bool
         /// The site answered the original's link with something else.
-        var wasOriginalRefused: Bool
+        var originalRefusal: OriginalsRefusal?
     }
 
     private enum PageFetch: Sendable {
@@ -585,30 +634,30 @@ public final class GalleryDownloader {
         let imageKey = ImagePage(link)?.imageKey ?? ""
         do {
             let source = try await service.imageSource(forImagePage: link)
-            var wasRefused = false
+            var refusal: OriginalsRefusal?
             if wantsOriginal, let originalURL = source.originalURL {
                 do {
                     let data = try await service.imageData(from: originalURL)
                     if GalleryFileStore.isOriginal(data, imageKey: imageKey), let size = GalleryFileStore.pixelSize(ofImageData: data) {
                         try files.write(data, folder: folder, fileName: fileName, isOriginal: true)
-                        return .saved(FetchedPage(size: size, isOriginal: true, askedForOriginal: true, wasOriginalRefused: false))
+                        return .saved(FetchedPage(size: size, isOriginal: true, askedForOriginal: true, originalRefusal: nil))
                     }
                     // Something that isn't the file.
-                    wasRefused = true
+                    refusal = .other
                 } catch SiteError.rateLimited {
                     return .rateLimited
                 } catch SiteError.network {
                     // Network trouble: fall back to what the page shows.
                 } catch {
-                    // A login bounce or some other page instead of the file.
-                    wasRefused = true
+                    // A login bounce, "requires GP", or some other page instead of the file.
+                    refusal = Self.refusal(for: error)
                 }
             }
             let data = try await service.imageData(from: source.url)
             guard let size = GalleryFileStore.pixelSize(ofImageData: data) else { return .failed }
             let isOriginal = GalleryFileStore.isOriginal(data, imageKey: imageKey)
             try files.write(data, folder: folder, fileName: fileName, isOriginal: isOriginal)
-            return .saved(FetchedPage(size: size, isOriginal: isOriginal, askedForOriginal: wantsOriginal && source.originalURL != nil, wasOriginalRefused: wasRefused))
+            return .saved(FetchedPage(size: size, isOriginal: isOriginal, askedForOriginal: wantsOriginal && source.originalURL != nil, originalRefusal: refusal))
         } catch SiteError.rateLimited {
             return .rateLimited
         } catch {
@@ -619,8 +668,8 @@ public final class GalleryDownloader {
     private enum Replacement: Sendable {
         /// The file is the original now: it already was, or it was just `replaced`.
         case original(CGSize, replaced: Bool)
-        /// The site answered the original's link with something else (usually: not logged in).
-        case refused
+        /// The site answered the original's link with something else (a login page, or "requires GP").
+        case refused(OriginalsRefusal)
         case rateLimited
         case failed
     }
@@ -645,7 +694,7 @@ public final class GalleryDownloader {
         do {
             let data = try await service.imageData(from: source.originalURL ?? source.url)
             guard GalleryFileStore.isOriginal(data, imageKey: imageKey), let size = GalleryFileStore.pixelSize(ofImageData: data) else {
-                return hasOriginalLink ? .refused : .failed
+                return hasOriginalLink ? .refused(.other) : .failed
             }
             try files.write(data, folder: folder, fileName: fileName, isOriginal: true)
             return .original(size, replaced: true)
@@ -654,8 +703,16 @@ public final class GalleryDownloader {
         } catch SiteError.network {
             return .failed
         } catch {
-            // A login bounce or some other page instead of the original.
-            return hasOriginalLink ? .refused : .failed
+            // A login bounce, "requires GP", or some other page instead of the original.
+            return hasOriginalLink ? .refused(refusal(for: error)) : .failed
+        }
+    }
+
+    private nonisolated static func refusal(for error: any Error) -> OriginalsRefusal {
+        switch error as? SiteError {
+        case .loginRequired: .needsLogin
+        case .originalsNeedGP: .needsGP
+        default: .other
         }
     }
 
@@ -677,7 +734,7 @@ public final class GalleryDownloader {
     /// originals were refused). The Downloads tab's buttons pick it up again later.
     private func settle() {
         guard isDownloadingAll, phase != .loading else { return }
-        let isIdle = queue.isEmpty && downloadTasks.isEmpty && linkTasks.isEmpty && coverTask == nil
+        let isIdle = queue.isEmpty && downloadTasks.isEmpty && linkTasks.isEmpty && coverTask == nil && !isRefreshingLinks
         let isDone = (!work.contains(.missing) || isComplete) && pagesToReplace.isEmpty
         guard isDone || isIdle else { return }
         work = []

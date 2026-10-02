@@ -6218,6 +6218,36 @@
         }
       }
     },
+    "Toast.DownloadFinishedOriginalsNeedGP" : {
+      "extractionState" : "manual",
+      "comment" : "The argument is the gallery title. Pages were saved as the site shows them, because this gallery's originals cost more GP than the account has",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” finished downloading, but its originals cost more GP than you have"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」のダウンロードが終わったけど、元画像は GP が足りなくてもらえなかったよ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」下载完成啦，但原图要 GP，GP 不够"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」下載完成囉，但原圖要 GP，GP 不夠"
+          }
+        }
+      }
+    },
     "Toast.DownloadFinishedWithoutOriginals" : {
       "extractionState" : "manual",
       "comment" : "The argument is the gallery title. The site refused the original files (usually: not logged in)",
@@ -6434,6 +6464,48 @@
         }
       }
     },
+    "Toast.MissingImagesDownloadedExceptNeedGP" : {
+      "extractionState" : "manual",
+      "comment" : "The argument is how many galleries got pages as the site shows them, because their originals cost more GP than the account has",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Missing images downloaded. %lld gallery needs more GP for originals."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Missing images downloaded. %lld galleries need more GP for originals."
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "足りない画像をダウンロードしたよ。でも %lld 件は GP が足りなくて元画像をもらえなかったよ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺少的图片下载好啦，但有 %lld 部的原图要 GP，GP 不够"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缺少的圖片下載好囉，但有 %lld 部的原圖要 GP，GP 不夠"
+          }
+        }
+      }
+    },
     "Toast.MissingImagesDownloadedWithoutOriginals" : {
       "extractionState" : "manual",
       "comment" : "The site refused the original files (usually: not logged in), so pages were saved as the site shows them",
@@ -6460,6 +6532,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "缺少的圖片下載好囉，但拿不到原圖"
+          }
+        }
+      }
+    },
+    "Toast.OriginalsNeedGP" : {
+      "extractionState" : "manual",
+      "comment" : "The site wants GP for this gallery's original files, and the account doesn't have enough",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This gallery’s originals cost GP, and you don’t have enough."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この作品の元画像は GP が必要だけど、足りないみたい"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这部的原图要 GP 才拿得到，GP 不够哦"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這部的原圖要 GP 才拿得到，GP 不夠喔"
           }
         }
       }
@@ -6550,6 +6652,48 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "圖片額度用完了，下載先停下來囉"
+          }
+        }
+      }
+    },
+    "Toast.UpgradedExceptNeedGP" : {
+      "extractionState" : "manual",
+      "comment" : "The argument is how many galleries stayed reduced because their originals cost more GP than the account has",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Upgraded to originals. %lld gallery needs more GP."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Upgraded to originals. %lld galleries need more GP."
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "元画像にアップグレードしたよ。でも %lld 件は GP が足りなかったよ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "升级成原图啦，但有 %lld 部的原图要 GP，GP 不够"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "升級成原圖囉，但有 %lld 部的原圖要 GP，GP 不夠"
           }
         }
       }

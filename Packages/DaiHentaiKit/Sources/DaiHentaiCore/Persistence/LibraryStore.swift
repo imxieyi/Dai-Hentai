@@ -161,6 +161,13 @@ public final class LibraryStore {
         try? context.delete(model: StoredPageList.self, where: #Predicate { $0.gid == gid && $0.token == token })
     }
 
+    /// Forgets a gallery's saved link pages after `index`, once they turn out to be saved with a different
+    /// number of links per page than the site lists now.
+    public func deletePageLists(gid: String, token: String, after index: Int) {
+        try? context.delete(model: StoredPageList.self, where: #Predicate { $0.gid == gid && $0.token == token && $0.index > index })
+        save()
+    }
+
     // MARK: - Singletons
 
     private func storedFilter() -> StoredSearchFilter {
