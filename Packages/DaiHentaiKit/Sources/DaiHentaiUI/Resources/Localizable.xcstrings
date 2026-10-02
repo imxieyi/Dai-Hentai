@@ -6656,6 +6656,48 @@
         }
       }
     },
+    "Toast.UpgradeStoppedNeedGP" : {
+      "extractionState" : "manual",
+      "comment" : "升級成原圖 stopped because this many galleries in a row (newest first) wanted GP for their originals; older galleries likely do too",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Upgrade stopped: %lld gallery in a row cost GP for originals, and older ones likely do too."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Upgrade stopped: %lld galleries in a row cost GP for originals, and older ones likely do too."
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 件続けて元画像に GP が必要だったから止めたよ。もっと古い作品もたぶん同じだよ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连续 %lld 部的原图都要 GP，更旧的应该也一样，先停下来啦"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "連續 %lld 部的原圖都要 GP，更舊的應該也一樣，先停下來囉"
+          }
+        }
+      }
+    },
     "Toast.UpgradedExceptNeedGP" : {
       "extractionState" : "manual",
       "comment" : "The argument is how many galleries stayed reduced because their originals cost more GP than the account has",

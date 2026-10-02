@@ -110,6 +110,8 @@ private struct MainTabs: View {
                 } else {
                     model.toasts.show(.toastMissingImagesDownloaded, kaomoji: "O3Ob", symbol: "checkmark.circle.fill")
                 }
+            case .upgradeStoppedForGP(let count):
+                model.toasts.show(.toastUpgradeStoppedNeedGP(count), kaomoji: "O口O", duration: .seconds(4))
             }
         }
         .sensoryFeedback(.success, trigger: model.downloads.lastFinished)

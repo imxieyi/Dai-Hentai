@@ -7,6 +7,9 @@ import UIKit
 ///
 /// The Downloads tab's 「下載缺少的圖片」 and 「升級成原圖」 run as a batch, one gallery at a time.
 /// Running out of image limits stops the batch and every other download.
+///
+/// The site wants GP for older galleries' originals, so 「升級成原圖」 goes newest first, and stops once
+/// `gpStreakLimit` galleries in a row wanted GP: the older ones left would too.
 @MainActor
 @Observable
 public final class DownloadCenter {
@@ -29,6 +32,8 @@ public final class DownloadCenter {
             /// A batch went through every gallery. `refusedOriginals` counts the galleries the site refused
             /// originals, by reason; their missing pages came as the site shows them.
             case batchFinished(GalleryDownloader.Work, refusedOriginals: [GalleryDownloader.OriginalsRefusal: Int])
+            /// 「升級成原圖」 stopped: this many galleries in a row wanted GP for their originals.
+            case upgradeStoppedForGP(Int)
         }
 
         public let id = UUID()
@@ -45,6 +50,10 @@ public final class DownloadCenter {
 
     private var batchQueue: [GalleryInfo] = []
     private var batchRefusals: [GalleryDownloader.OriginalsRefusal: Int] = [:]
+    /// Galleries in a row that wanted GP for their originals, in the running batch.
+    private var batchGPStreak = 0
+    /// How many galleries in a row may want GP before 「升級成原圖」 stops.
+    public static let gpStreakLimit = 10
     private let library: LibraryStore
     private var serviceProvider: @MainActor () -> any GalleryService
 
@@ -140,12 +149,15 @@ public final class DownloadCenter {
         updateIdleTimer()
     }
 
-    /// 「下載缺少的圖片」 (`.missing`) or 「升級成原圖」 (`.originals`) for these downloads, one at a time.
+    /// 「下載缺少的圖片」 (`.missing`) or 「升級成原圖」 (`.originals`, newest gallery first) for these
+    /// downloads, one at a time.
     public func startBatch(_ work: GalleryDownloader.Work, galleries: [GalleryInfo]) {
         guard batch == nil, !galleries.isEmpty else { return }
         batch = Batch(work: work, total: galleries.count)
-        batchQueue = galleries
+        // Gallery IDs go up with time.
+        batchQueue = work == .originals ? galleries.sorted { (Int($0.gid) ?? 0) > (Int($1.gid) ?? 0) } : galleries
         batchRefusals = [:]
+        batchGPStreak = 0
         startNextInBatch()
     }
 
@@ -234,11 +246,17 @@ public final class DownloadCenter {
                 if let refusal = downloader.originalsRefusal {
                     self.batchRefusals[refusal, default: 0] += 1
                 }
+                self.batchGPStreak = downloader.originalsRefusal == .needsGP ? self.batchGPStreak + 1 : 0
                 if batch.work == .originals, downloader.originalsRefusal == .needsLogin {
                     // The next gallery wouldn't get originals either.
                     self.batch = nil
                     self.batchQueue.removeAll()
                     self.lastNotice = Notice(kind: .originalsRefused(.needsLogin))
+                } else if batch.work == .originals, self.batchGPStreak >= Self.gpStreakLimit {
+                    // The galleries left are older still.
+                    self.batch = nil
+                    self.batchQueue.removeAll()
+                    self.lastNotice = Notice(kind: .upgradeStoppedForGP(self.batchGPStreak))
                 } else {
                     self.advanceBatch(past: gallery)
                 }

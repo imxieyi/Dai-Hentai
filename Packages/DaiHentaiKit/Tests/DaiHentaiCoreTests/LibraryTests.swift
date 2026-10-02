@@ -425,6 +425,62 @@ struct LegacyDatabaseBuilder {
         #expect(center.lastNotice?.kind == .batchFinished(.originals, refusedOriginals: [.needsGP: 1]))
     }
 
+    @Test func anUpgradeBatchGoesNewestFirst() async throws {
+        let library = try makeLibrary()
+        let older = FixtureGalleryService.galleries[22], newer = FixtureGalleryService.galleries[6]
+        for gallery in [older, newer] {
+            try writeReducedPages(of: gallery, to: library, count: 1)
+            library.markDownloaded(gallery)
+        }
+        let center = DownloadCenter(library: library) { FixtureGalleryService(latency: .milliseconds(5)) }
+
+        center.startBatch(.originals, galleries: [older, newer])
+        #expect(center.batch?.current == newer)
+        var order: [GalleryInfo] = []
+        for _ in 0..<600 where center.batch != nil {
+            if let current = center.batch?.current, order.last != current { order.append(current) }
+            try await Task.sleep(for: .milliseconds(5))
+        }
+        #expect(order == [newer, older])
+    }
+
+    @Test func anUpgradeBatchStopsAfterTenGalleriesInARowNeedGP() async throws {
+        let library = try makeLibrary()
+        let galleries = Array(FixtureGalleryService.galleries.prefix(12)) // newest first
+        for gallery in galleries {
+            try writeReducedPages(of: gallery, to: library, count: 1)
+            library.markDownloaded(gallery)
+        }
+        let requests = RequestLog()
+        let center = DownloadCenter(library: library) { FlakyService(needsGPFor: Set(galleries.map(\.gid)), log: requests) }
+
+        center.startBatch(.originals, galleries: galleries.reversed())
+        for _ in 0..<600 where center.batch != nil {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(center.lastNotice?.kind == .upgradeStoppedForGP(DownloadCenter.gpStreakLimit))
+        #expect(requests.originals == 10) // the two oldest weren't asked
+    }
+
+    @Test func aGalleryThatUpgradesStartsTheGPCountAgain() async throws {
+        let library = try makeLibrary()
+        let galleries = Array(FixtureGalleryService.galleries.prefix(19)) // newest first
+        for gallery in galleries {
+            try writeReducedPages(of: gallery, to: library, count: 1)
+            library.markDownloaded(gallery)
+        }
+        // 9 need GP, then one upgrades, then 9 more need GP.
+        let needGP = Set(galleries.map(\.gid)).subtracting([galleries[9].gid])
+        let center = DownloadCenter(library: library) { FlakyService(needsGPFor: needGP) }
+
+        center.startBatch(.originals, galleries: galleries)
+        for _ in 0..<1000 where center.batch != nil {
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(center.lastNotice?.kind == .batchFinished(.originals, refusedOriginals: [.needsGP: 18]))
+        #expect(!library.downloadGaps(galleries[9]).hasReducedPages)
+    }
+
     @Test func aMissingImagesBatchStillAsksForOriginalsAfterAGalleryThatNeedsGP() async throws {
         let library = try makeLibrary()
         let galleries = [FixtureGalleryService.galleries[6], FixtureGalleryService.galleries[22]]
