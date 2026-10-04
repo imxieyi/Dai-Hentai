@@ -10,16 +10,22 @@ struct TabStack<Root: View>: View {
     @Namespace private var zoom
 
     var body: some View {
+        // Every view in the stack says the same thing about the tab bar, from the path.
+        let tabBar: Visibility = model.router.hidesTabBar(for: tab) ? .hidden : .visible
         NavigationStack(path: Binding(get: { model.router.path(for: tab) }, set: { model.router.setPath($0, for: tab) })) {
             root()
+                .toolbarVisibility(tabBar, for: .tabBar)
                 .navigationDestination(for: Route.self) { route in
-                    switch route {
-                    case .reader(let reader):
-                        ReaderView(route: reader)
-                            .zoomDestination(id: reader.gallery.id, namespace: zoom)
-                    case let .web(title, url):
-                        SiteWebView(title: title, url: url)
+                    Group {
+                        switch route {
+                        case .reader(let reader):
+                            ReaderView(route: reader)
+                                .zoomDestination(id: reader.gallery.id, namespace: zoom)
+                        case let .web(title, url):
+                            SiteWebView(title: title, url: url)
+                        }
                     }
+                    .toolbarVisibility(tabBar, for: .tabBar)
                 }
         }
         .environment(\.zoomNamespace, zoom)

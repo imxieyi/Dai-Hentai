@@ -172,6 +172,46 @@ final class SmokeUITests: XCTestCase {
         snap("26-list-related-search")
     }
 
+    // MARK: - Tab bar after reading
+
+    /// The whole tab bar is on screen and can be tapped: every tab, not only the selected one (a shrunken
+    /// bar shows just that).
+    private var isTabBarShown: Bool {
+        ["列表", "歷史", "下載", "設定"].allSatisfy { title in
+            let button = app.tabBars.buttons[title]
+            return button.exists && button.isHittable
+        }
+    }
+
+    /// After a related search from a download, in and out of a gallery from the results, leaving with the back
+    /// swipe: the tab bar comes back every time.
+    func testTabBarComesBackAfterSwipingOutOfTheReader() {
+        app.launch()
+        XCTAssertTrue(element("galleryCard").waitForExistence(timeout: 10))
+        tab("下載").tap()
+        pause(1.5)
+        element("galleryCard").press(forDuration: 1.2)
+        pause()
+        app.buttons["用相關字詞搜尋"].firstMatch.tap()
+        XCTAssertTrue(element("relatedConfirmButton").waitForExistence(timeout: 5))
+        app.scrollViews.buttons.element(boundBy: 0).tap()
+        element("relatedConfirmButton").tap()
+        pause(2)
+        let window = app.windows.firstMatch
+        for visit in 0..<4 {
+            element("galleryCard").tap()
+            let read = element("readNowButton").waitForExistence(timeout: 3) ? element("readNowButton") : element("resumeButton")
+            read.tap()
+            pause(1.2)
+            XCTAssertFalse(isTabBarShown, "visit \(visit): the reader covers the tab bar")
+            window.coordinate(withNormalizedOffset: CGVector(dx: 0.0, dy: 0.55))
+                .press(forDuration: 0.02, thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.55)), withVelocity: .fast, thenHoldForDuration: 0)
+            pause(1.5)
+            XCTAssertFalse(element("readerMoreMenu").exists, "visit \(visit): the swipe left the reader")
+            XCTAssertTrue(isTabBarShown, "visit \(visit): the tab bar is back")
+        }
+    }
+
     // MARK: - 歷史 / 下載
 
     func testHistoryAndDownloads() {

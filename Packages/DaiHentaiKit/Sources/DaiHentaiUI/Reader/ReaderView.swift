@@ -60,11 +60,11 @@ private struct ReaderContent: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(false)
         .toolbarVisibility(reader.isChromeVisible ? .visible : .hidden, for: .navigationBar)
-        .toolbarVisibility(.hidden, for: .tabBar)
         .toolbar { toolbar }
         .onAppear {
             reader.appear()
             app.router.visibleReaders += 1
+            app.router.hidesSystemOverlays = !reader.isChromeVisible
             isFocused = true
         }
         .onDisappear {

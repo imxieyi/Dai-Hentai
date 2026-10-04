@@ -38,7 +38,7 @@ final class AppRouter {
     var galleryCard: GalleryCardRoute?
     var isSearchPresented = false
     var isExWebLoginPresented = false
-    /// Number of readers on screen; the status bar and tab accessory hide while > 0.
+    /// Number of reader views on screen. A popped reader's view stays until its transition ends.
     var visibleReaders = 0
     /// The reader asks for this when its chrome is hidden.
     var hidesSystemOverlays = false
@@ -50,6 +50,22 @@ final class AppRouter {
         case .downloads: downloadsPath
         case .settings: settingsPath
         }
+    }
+
+    /// The reader and the web page take the whole screen: no tab bar over them. This follows the path,
+    /// not the views' lifetimes, so a popped reader that lingers (its transition interrupted) can't keep the
+    /// tab bar hidden.
+    func hidesTabBar(for tab: AppTab) -> Bool {
+        switch path(for: tab).last {
+        case .reader?, .web?: true
+        case nil: false
+        }
+    }
+
+    /// A reader is on screen (top of the shown tab): the status bar, the tab accessory and the home
+    /// indicator make way for it.
+    var isReaderShown: Bool {
+        if case .reader? = path(for: tab).last { true } else { false }
     }
 
     func setPath(_ path: [Route], for tab: AppTab) {

@@ -23,6 +23,7 @@ private struct MainTabs: View {
     @Environment(AppModel.self) private var model
     @Environment(\.scenePhase) private var scenePhase
     @Query(Self.recentDescriptor) private var recent: [StoredGallery]
+    @State private var isStatusBarHidden = false
 
     private static var recentDescriptor: FetchDescriptor<StoredGallery> {
         var descriptor = FetchDescriptor<StoredGallery>(sortBy: [SortDescriptor(\.lastViewedAt, order: .reverse)])
@@ -65,10 +66,18 @@ private struct MainTabs: View {
             ExWebLoginView()
         }
         .overlay {
-            ToastOverlay(center: model.toasts, isCentered: router.visibleReaders > 0)
+            ToastOverlay(center: model.toasts, isCentered: router.isReaderShown)
         }
-        .statusBarHidden(router.visibleReaders > 0)
-        .persistentSystemOverlays(router.hidesSystemOverlays ? .hidden : .automatic)
+        .statusBarHidden(isStatusBarHidden)
+        .persistentSystemOverlays(router.isReaderShown && router.hidesSystemOverlays ? .hidden : .automatic)
+        .task(id: [router.isReaderShown, router.visibleReaders > 0]) {
+            // Leaving the reader, the status bar waits for the reader's view to go: back mid-transition, it
+            // collapses the large title of the screen underneath. It doesn't wait forever for a view that lingers.
+            if !router.isReaderShown && router.visibleReaders > 0 {
+                do { try await Task.sleep(for: .seconds(2)) } catch { return }
+            }
+            isStatusBarHidden = router.isReaderShown
+        }
         .background {
             WindowSceneReader { scene in model.lock.attach(to: scene) }
         }
@@ -129,7 +138,7 @@ private struct MainTabs: View {
 
     /// 「下載中」 wins over 「繼續看」. Hidden while reading.
     private var accessory: BottomAccessory.Content? {
-        guard model.router.visibleReaders == 0 else { return nil }
+        guard !model.router.isReaderShown else { return nil }
         let active = model.downloads.activeDownloads
         if !active.isEmpty {
             return .downloading(count: active.count, progress: model.downloads.overallProgress, title: active[0].gallery.bestTitle)

@@ -21,7 +21,6 @@ struct SiteWebView: View {
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarVisibility(.hidden, for: .tabBar)
         .toolbar {
             if page.isLoading {
                 ToolbarItem(placement: .topBarTrailing) { ProgressView() }
