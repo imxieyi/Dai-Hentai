@@ -125,7 +125,7 @@ struct SettingsView: View {
     // MARK: - 用量
 
     private var usageSection: some View {
-        Section(.settingsUsageSection) {
+        Section {
             if let usage {
                 StorageBar(usage: usage)
                     .padding(.vertical, 4)
@@ -135,10 +135,18 @@ struct SettingsView: View {
                 LabeledContent(.tabHistory, value: String(localized: .commonCalculating))
                 LabeledContent(.tabDownloads, value: String(localized: .commonCalculating))
             }
+            ShareLink(item: ExportedLibrary(container: model.library.container), preview: ExportedLibrary.preview) {
+                Label(.settingsExportLibrary, systemImage: "square.and.arrow.up")
+            }
+            .accessibilityIdentifier("settingsExportLibrary")
             Button(.commonClearHistory, role: .destructive) {
                 isConfirmingClear = true
             }
             .disabled((usage?.historyCount ?? 0) == 0)
+        } header: {
+            Text(.settingsUsageSection)
+        } footer: {
+            Text(.settingsExportLibraryFooter)
         }
         .monospacedDigit()
     }

@@ -161,6 +161,81 @@ struct LegacyDatabaseBuilder {
     }
 }
 
+@Suite(.serialized) @MainActor struct LibraryExportTests {
+    @Test func exportsTheWholeLibraryAsOneJSONFile() async throws {
+        let container = try LibraryContainer.make(inMemory: true)
+        let root = URL.temporaryDirectory.appending(path: "files-\(UUID().uuidString)", directoryHint: .isDirectory)
+        let store = LibraryStore(container: container, files: GalleryFileStore(root: root))
+        let read = GalleryInfo(gid: "1", token: "a", title: "Read/Half", titleJpn: "半分", categoryName: "Manga", fileCount: 30, rating: 4.52, tags: ["female:glasses", "full color"])
+        let downloaded = GalleryInfo(gid: "2", token: "b", title: "Downloaded", fileCount: 3)
+        let imported = GalleryInfo(gid: "3", token: "c", title: "From 3.x without a time stamp")
+        store.recordVisit(read)
+        store.setLastReadPage(12, for: read)
+        store.recordVisit(imported)
+        store.markDownloaded(downloaded)
+        try #require(store.gallery(forKey: read.id)).lastViewedAt = Date(timeIntervalSince1970: 1_515_304_499.844)
+        try #require(store.gallery(forKey: imported.id)).lastViewedAt = .distantPast
+        try container.mainContext.save()
+        store.savePageList(["https://e-hentai.org/s/k2/1-41"], gid: "1", token: "a", index: 1)
+        store.savePageList(["https://e-hentai.org/s/k1/1-1"], gid: "1", token: "a", index: 0)
+        store.savePageList(["https://e-hentai.org/s/k3/2-1"], gid: "2", token: "b", index: 0)
+        store.searchFilter = SearchFilter(keyword: "c93", minimumRating: .three, language: .chineseOnly, categories: [.manga, .doujinshi])
+        store.preferences = Preferences(readingDirection: .horizontal, isAppLocked: true, asksBeforeOpening: false, hidesInAppSwitcher: true)
+
+        let exportedAt = Date(timeIntervalSince1970: 1_800_000_000.25)
+        let folder = URL.temporaryDirectory.appending(path: "export-\(UUID().uuidString)", directoryHint: .isDirectory)
+        let file = try await LibraryExporter(modelContainer: container).export(to: folder, exportedAt: exportedAt)
+        #expect(file.deletingLastPathComponent().standardizedFileURL == folder.standardizedFileURL)
+        #expect(file.lastPathComponent == LibraryArchive.fileName(exportedAt: exportedAt))
+        #expect(file.lastPathComponent.hasPrefix("Dai-Hentai-Library-2027-01-") && file.pathExtension == "json")
+
+        let data = try Data(contentsOf: file)
+        let archive = try LibraryArchive.decoded(from: data)
+        #expect(archive.format == "tw.daidouji.dai-hentai.library")
+        #expect(archive.version == 1)
+        #expect(abs(archive.exportedAt.timeIntervalSince(exportedAt)) < 0.001)
+
+        // Newest first; every stored field comes along.
+        #expect(archive.galleries.map(\.gid) == ["2", "1", "3"])
+        #expect(archive.galleries[0].isDownloaded)
+        #expect(archive.galleries[0].downloadedAt != nil)
+        let history = archive.galleries[1]
+        #expect(history.token == "a" && history.title == "Read/Half" && history.titleJpn == "半分")
+        #expect(history.categoryName == "Manga" && history.fileCount == 30 && history.rating == 4.52)
+        #expect(history.tags == ["female:glasses", "full color"])
+        #expect(history.lastReadPage == 12)
+        #expect(!history.isDownloaded && history.downloadedAt == nil)
+        #expect(abs(history.lastViewedAt.timeIntervalSince1970 - 1_515_304_499.844) < 0.001)
+        #expect(abs(archive.galleries[2].lastViewedAt.timeIntervalSince(.distantPast)) < 0.001)
+
+        #expect(archive.pageLists.map { "\($0.gid)-\($0.token)-\($0.index)" } == ["1-a-0", "1-a-1", "2-b-0"])
+        #expect(archive.pageLists[1].pages == ["https://e-hentai.org/s/k2/1-41"])
+
+        #expect(archive.searchFilter.keyword == "c93")
+        #expect(archive.searchFilter.minimumRating == MinimumRating.three.rawValue)
+        #expect(archive.searchFilter.language == "chineseOnly")
+        #expect(archive.searchFilter.enabledCategories == ["Doujinshi", "Manga"])
+        #expect(archive.preferences.readingDirection == "horizontal")
+        #expect(archive.preferences.isAppLocked && !archive.preferences.asksBeforeOpening && archive.preferences.hidesInAppSwitcher)
+
+        // Plain JSON that other tools can read.
+        let json = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        #expect(json["format"] as? String == LibraryArchive.formatIdentifier)
+        #expect(json["exportedAt"] as? String == "2027-01-15T08:00:00.250Z")
+        #expect(String(decoding: data, as: UTF8.self).contains("https://e-hentai.org/s/k1/1-1"))
+    }
+
+    @Test func settingsNeverChangedExportAsTheDefaults() async throws {
+        let archive = try await LibraryExporter(modelContainer: LibraryContainer.make(inMemory: true)).archive(exportedAt: Date(timeIntervalSince1970: 1_800_000_000))
+        #expect(archive.galleries.isEmpty && archive.pageLists.isEmpty)
+        #expect(archive.searchFilter.keyword.isEmpty)
+        #expect(archive.searchFilter.enabledCategories.count == GalleryCategory.allCases.count)
+        #expect(archive.preferences.readingDirection == "vertical")
+        #expect(!archive.preferences.isAppLocked && archive.preferences.asksBeforeOpening)
+        #expect(try LibraryArchive.decoded(from: archive.encoded()) == archive)
+    }
+}
+
 @Suite(.serialized) @MainActor struct DownloaderTests {
     @Test func fullDownloadWritesEveryPageWithLegacyFileNames() async throws {
         let root = URL.temporaryDirectory.appending(path: "dl-\(UUID().uuidString)", directoryHint: .isDirectory)

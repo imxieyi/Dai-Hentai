@@ -15,6 +15,48 @@
 
 歷史 = `isDownloaded == false` 的作品, 下載 = `isDownloaded == true`, 跟 3.x 一樣是同一個作品只存一份.
 
+### 匯出資料庫
+「設定 > 用量 > 匯出資料庫」會把上面四個 model 整個存成一個 JSON 檔 (`Dai-Hentai-Library-2026-10-21.json`, 日期是匯出那天), 從分享選單 AirDrop 或存到「檔案」.
+格式定義在 `Packages/DaiHentaiKit/Sources/DaiHentaiCore/Persistence/LibraryArchive.swift`, 欄位跟 `LibrarySchemaV1` 一一對應, 但是是獨立的型別, 只有 `version` 變的時候格式才會變.
+
+`````
+{
+  "exportedAt" : "2026-10-21T08:00:00.250Z",
+  "format" : "tw.daidouji.dai-hentai.library",
+  "galleries" : [
+    {
+      "categoryName" : "Non-H",
+      "downloadedAt" : "2026-10-20T12:00:00.000Z",
+      "fileCount" : 355,
+      "fileSize" : "126.7 MB",
+      "gid" : "1166044",
+      "isDownloaded" : true,
+      "lastReadPage" : 12,
+      "lastViewedAt" : "2026-10-21T07:58:12.345Z",
+      "posted" : "2018-01-07 02:46",
+      "rating" : 4.52,
+      "tags" : [ "parody:highschool dxd", "female:demon girl" ],
+      "thumb" : "https://ehgt.org/cc/24/cc24fd08ffa102dd92a565e5627a2d27a414d409-276878-640-800-jpg_l.jpg",
+      "title" : "Highschool DxD - Rossweisse",
+      "titleJpn" : "",
+      "token" : "2227d8d6a0",
+      "uploader" : "chaoticthinker"
+    }
+  ],
+  "pageLists" : [
+    { "gid" : "1166044", "index" : 0, "pages" : [ "https://e-hentai.org/s/cc24fd08ff/1166044-1" ], "token" : "2227d8d6a0" }
+  ],
+  "preferences" : { "asksBeforeOpening" : true, "hidesInAppSwitcher" : false, "isAppLocked" : false, "readingDirection" : "vertical" },
+  "searchFilter" : { "enabledCategories" : [ "Doujinshi", "Manga" ], "keyword" : "c93", "language" : "any", "minimumRating" : 0 },
+  "version" : 1
+}
+`````
+
+- key 照字母排序, 時間是 ISO 8601 (UTC, 到毫秒); `galleries` 是新的在前, 沒下載過的作品沒有 `downloadedAt`
+- `minimumRating`、`language`、`readingDirection` 跟資料庫一樣存 raw value (`0`...`4`、`any` / `chineseOnly` / `originalOnly`、`vertical` / `horizontal`)
+- 從來沒改過的搜尋條件跟設定 (資料庫裡還沒有那一筆) 會匯出成預設值
+- 圖片 (`Documents` 裡的資料夾) 跟 Ex 的 cookie 不在裡面
+
 ### 從 3.x 搬家
 第一次打開 4.0 時, `LegacyCouchbaseImporter` 會直接用 SQLite 讀 `Application Support/CouchbaseLite/<名稱>.cblite2/db.sqlite3`
 (`revs` 表裡 `current = 1 AND deleted = 0` 的 JSON), 轉成上面的 model. 舊檔案不會被刪掉, 搬完會在 `UserDefaults` 記一個

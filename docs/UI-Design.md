@@ -97,7 +97,7 @@ The **lock** lives in its own `UIWindow` above everything, including sheets.
 - **下載**: 共 N 部 · size, then 下載中 and 已下載 sections, with live progress. The footnote explains that the screen stays awake while downloading.
 - **設定**
   - App 狀態: the four tests (the API row shows 不知道 on a parse failure), Ex status, 用網頁登入 Ex, ExKey 登錄, 「Ex 登入整個失敗 還是只有熊貓 點我登出」.
-  - 用量: stacked bar, 歷史 / 下載 「12.3 MB (45)」, 清除所有觀看紀錄.
+  - 用量: stacked bar, 歷史 / 下載 「12.3 MB (45)」, 匯出資料庫 (share sheet, one JSON file; the footer says what's in it), 清除所有觀看紀錄.
   - 觀看習慣: 滑動方向切換, 點列表作品時先跳出作品卡.
   - 隱私設定: App 上鎖 (legacy dialog, then one biometric check), 切換 App 時遮住畫面.
   - 關於.

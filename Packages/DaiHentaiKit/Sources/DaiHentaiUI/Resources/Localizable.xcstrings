@@ -5340,6 +5340,66 @@
         }
       }
     },
+    "Settings.ExportLibrary" : {
+      "extractionState" : "manual",
+      "comment" : "Button in 用量: shares the whole database as one file",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Library"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライブラリを書き出す"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出数据库"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "匯出資料庫"
+          }
+        }
+      }
+    },
+    "Settings.ExportLibraryFooter" : {
+      "extractionState" : "manual",
+      "comment" : "Footer under 用量: what the exported file has",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The exported file has your viewing history, downloads list, reading progress, filters and settings, but not the images or your Ex login."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "書き出したファイルには閲覧履歴、ダウンロード一覧、どこまで読んだか、検索条件と設定が入るよ。画像とExのログインは入らないよ。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出的文件会有浏览记录、下载列表、看到第几页、搜索条件和设置, 不包含图片和 Ex 登录。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "匯出的檔案會有觀看紀錄、下載清單、看到第幾頁、搜尋條件跟設定, 不包含圖片跟 Ex 登入。"
+          }
+        }
+      }
+    },
     "Settings.HideInSwitcher" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5365,6 +5425,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "切換 App 時遮住畫面"
+          }
+        }
+      }
+    },
+    "Settings.LibraryFile" : {
+      "extractionState" : "manual",
+      "comment" : "Share sheet title of the exported database file",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dai-Hentai Library"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dai-Hentai ライブラリ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dai-Hentai 数据库"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dai-Hentai 資料庫"
           }
         }
       }
